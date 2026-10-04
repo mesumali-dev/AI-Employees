@@ -1,0 +1,13 @@
+{
+  "provider": "hostinger",
+  "rest_base": "https://api.mail.hostinger.com",
+  "send_path": "/api/v1/mailboxes/{mailbox}/send",
+  "mailboxes": [
+    {
+      "resourceId": "ACf6e4d69fa79836df20f2e0714dd3",
+      "address": "mesum@cortechsolution.com"
+    }
+  ],
+  "default_mailbox_resource_id": "ACf6e4d69fa79836df20f2e0714dd3",
+  "default_from_address": "mesum@cortechsolution.com"
+}

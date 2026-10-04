@@ -1,0 +1,17 @@
+# Environment / secrets — never commit real credentials.
+# .env holds live API tokens (e.g. HOSTINGER_API_TOKEN). The template
+# .env.example IS tracked so others know what keys to fill in.
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# OS cruft
+.DS_Store
+Thumbs.db

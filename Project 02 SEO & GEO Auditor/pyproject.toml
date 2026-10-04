@@ -1,0 +1,26 @@
+[project]
+name = "antigravity-seo"
+version = "0.1.0"
+description = "Antigravity SEO & GEO Auditor Agent tools and dependencies"
+readme = "GEMINI.md"
+requires-python = ">=3.10"
+dependencies = [
+    "beautifulsoup4>=4.15.0,<5.0.0",
+    "courlan>=1.4.0,<2.0.0",
+    "google-ads>=31.4.0,<40.0.0",
+    "google-analytics-data>=0.18.0,<1.0.0",
+    "google-api-python-client>=2.196.0,<3.0.0",
+    "google-auth>=2.56.2,<3.0.0",
+    "google-auth-httplib2>=0.4.2,<1.0.0",
+    "htmldate>=1.10.0,<2.0.0",
+    "lxml>=6.1.1,<7.0.0",
+    "lxml-html-clean>=0.4.5,<1.0.0",
+    "matplotlib>=3.9.0,<4.0.0",
+    "numpy>=2.2.6,<3.0.0",
+    "openpyxl>=3.1.5,<4.0.0",
+    "playwright>=1.62.0,<2.0.0",
+    "requests>=2.34.2,<3.0.0",
+    "trafilatura>=2.2.0,<3.0.0",
+    "urllib3>=2.7.0,<3.0.0",
+    "weasyprint>=70.0,<71.0",
+]
