@@ -1,0 +1,353 @@
+{
+  "upstream_version": "v2.4.2-3-g4b99de2",
+  "upstream_commit": "4b99de2",
+  "scripts": [
+    {
+      "name": "analyze_visual.py",
+      "status": "MODIFIED",
+      "path_local": "scripts/analyze_visual.py",
+      "path_upstream": "upstream-claude-seo/scripts/analyze_visual.py",
+      "is_protected": true,
+      "protection_reason": "Contains Windows UTF-8 reconfigure and resilient page.goto(wait_until='load') fallback for Next.js SSR.",
+      "antigravity_rule": "Do NOT replace wait_until='load' with wait_until='networkidle'. Keep sys.stdout.reconfigure.",
+      "diff": "--- local/analyze_visual.py\n+++ upstream/analyze_visual.py\n@@ -11,13 +11,6 @@\n import os\n import sys\n from urllib.parse import ParseResult, urlparse\n-\n-if sys.platform == \"win32\":\n-    try:\n-        sys.stdout.reconfigure(encoding=\"utf-8\", errors=\"backslashreplace\")\n-        sys.stderr.reconfigure(encoding=\"utf-8\", errors=\"backslashreplace\")\n-    except Exception:\n-        pass\n \n try:\n     from playwright.sync_api import TimeoutError as PlaywrightTimeout\n@@ -109,17 +102,7 @@\n             desktop = browser.new_context(viewport={\"width\": 1920, \"height\": 1080})\n             page = desktop.new_page()\n             page.route(\"**/*\", route_handler)\n-            try:\n-                page.goto(url, wait_until=\"load\", timeout=timeout)\n-            except PlaywrightTimeout:\n-                try:\n-                    page.goto(url, wait_until=\"domcontentloaded\", timeout=timeout)\n-                except Exception:\n-                    pass\n-            try:\n-                page.wait_for_timeout(500)\n-            except Exception:\n-                pass\n+            page.goto(url, wait_until=\"networkidle\", timeout=timeout)\n \n             # Check H1 visibility above fold\n             h1 = page.query_selector(\"h1\")\n@@ -174,17 +157,7 @@\n             mobile = browser.new_context(viewport={\"width\": 375, \"height\": 812})\n             page = mobile.new_page()\n             page.route(\"**/*\", route_handler)\n-            try:\n-                page.goto(url, wait_until=\"load\", timeout=timeout)\n-            except PlaywrightTimeout:\n-                try:\n-                    page.goto(url, wait_until=\"domcontentloaded\", timeout=timeout)\n-                except Exception:\n-                    pass\n-            try:\n-                page.wait_for_timeout(500)\n-            except Exception:\n-                pass\n+            page.goto(url, wait_until=\"networkidle\", timeout=timeout)\n \n             # Check viewport meta\n             viewport_meta = page.query_selector('meta[name=\"viewport\"]')\n"
+    },
+    {
+      "name": "capture_screenshot.py",
+      "status": "MODIFIED",
+      "path_local": "scripts/capture_screenshot.py",
+      "path_upstream": "upstream-claude-seo/scripts/capture_screenshot.py",
+      "is_protected": true,
+      "protection_reason": "Contains Windows UTF-8 reconfigure, resilient load timeout, and Unicode fallback print.",
+      "antigravity_rule": "Do NOT replace wait_until='load' with wait_until='networkidle'. Keep UnicodeEncodeError handler.",
+      "diff": "--- local/capture_screenshot.py\n+++ upstream/capture_screenshot.py\n@@ -19,13 +19,6 @@\n import os\n import sys\n from urllib.parse import ParseResult, urlparse\n-\n-if sys.platform == \"win32\":\n-    try:\n-        sys.stdout.reconfigure(encoding=\"utf-8\", errors=\"backslashreplace\")\n-        sys.stderr.reconfigure(encoding=\"utf-8\", errors=\"backslashreplace\")\n-    except Exception:\n-        pass\n \n try:\n     from playwright.sync_api import (\n@@ -142,20 +135,11 @@\n             # private IP even after Chromium re-resolves DNS.\n             page.route(\"**/*\", route_handler)\n \n-            # Navigate with resilient fallback for SSR / dynamic pages\n-            try:\n-                page.goto(url, wait_until=\"load\", timeout=timeout)\n-            except PlaywrightTimeout:\n-                try:\n-                    page.goto(url, wait_until=\"domcontentloaded\", timeout=timeout)\n-                except Exception:\n-                    pass\n+            # Navigate and wait for network idle\n+            page.goto(url, wait_until=\"networkidle\", timeout=timeout)\n \n             # Wait a bit more for any lazy-loaded content\n-            try:\n-                page.wait_for_timeout(1000)\n-            except Exception:\n-                pass\n+            page.wait_for_timeout(1000)\n \n             # Capture screenshot\n             page.screenshot(path=output_path, full_page=full_page)\n@@ -217,16 +201,10 @@\n             timeout=args.timeout,\n         )\n \n-        try:\n-            if result[\"success\"]:\n-                print(f\"  ✓ Saved to {output_path}\")\n-            else:\n-                print(f\"  ✗ Failed: {result['error']}\")\n-        except UnicodeEncodeError:\n-            if result[\"success\"]:\n-                print(f\"  [OK] Saved to {output_path}\")\n-            else:\n-                print(f\"  [FAIL] Failed: {result['error']}\")\n+        if result[\"success\"]:\n+            print(f\"  ✓ Saved to {output_path}\")\n+        else:\n+            print(f\"  ✗ Failed: {result['error']}\")\n \n \n if __name__ == \"__main__\":\n"
+    },
+    {
+      "name": "google_auth.py",
+      "status": "MODIFIED",
+      "path_local": "scripts/google_auth.py",
+      "path_upstream": "upstream-claude-seo/scripts/google_auth.py",
+      "is_protected": false,
+      "protection_reason": "",
+      "antigravity_rule": "Port logic while ensuring GEMINI.md rules.",
+      "diff": "--- local/google_auth.py\n+++ upstream/google_auth.py\n@@ -202,19 +202,25 @@\n \n \n def _prefers_gcloud() -> bool:\n-    \"\"\"CLAUDE_SEO_GOOGLE_AUTH=adc or ANTIGRAVITY_SEO_GOOGLE_AUTH=adc picks the gcloud sign-in.\"\"\"\n-    val = os.environ.get(\"ANTIGRAVITY_SEO_GOOGLE_AUTH\", \"\") or os.environ.get(\"CLAUDE_SEO_GOOGLE_AUTH\", \"\")\n-    return val.strip().lower() in (\"adc\", \"gcloud\")\n+    \"\"\"CLAUDE_SEO_GOOGLE_AUTH=adc picks the gcloud sign-in even when a service\n+    account is configured (which may not have access to every property).\"\"\"\n+    return os.environ.get(\"CLAUDE_SEO_GOOGLE_AUTH\", \"\").strip().lower() in (\"adc\", \"gcloud\")\n \n \n def get_gcloud_credentials(scopes: list):\n     \"\"\"Credentials from the person's own gcloud sign-in\n     (`gcloud auth application-default login`), or None.\n+\n+    Read from the gcloud file directly, never through google.auth.default(),\n+    which would load GOOGLE_APPLICATION_CREDENTIALS (a service account) first.\n     \"\"\"\n     if _load_gcloud_adc() is None:\n         return None\n     try:\n         from google.oauth2.credentials import Credentials\n+        # Refresh with the scopes granted at `gcloud auth application-default login`:\n+        # asking for others (say, full webmasters over webmasters.readonly) fails\n+        # with invalid_scope. `scopes` is accepted for symmetry and not sent.\n         return Credentials.from_authorized_user_file(_gcloud_adc_path())\n     except Exception as e:\n         print(f\"gcloud sign-in could not be used: {type(e).__name__}\", file=sys.stderr)\n@@ -368,7 +374,7 @@\n     \"\"\"\n     config = load_config()\n \n-    # An explicit choice of gcloud sign-in wins.\n+    # An explicit choice of the person's own gcloud sign-in wins.\n     if _prefers_gcloud():\n         creds = get_gcloud_credentials(scopes)\n         if creds is not None:\n@@ -408,7 +414,7 @@\n             except ImportError:\n                 print(\"Error: google-auth required. Install with: pip install google-auth\", file=sys.stderr)\n \n-    # Fall back to service account, then to gcloud sign-in.\n+    # Fall back to service account, then to the person's gcloud sign-in.\n     return get_service_account_credentials(scopes) or get_gcloud_credentials(scopes)\n \n \n@@ -643,6 +649,7 @@\n         # Check OAuth token first\n         token_data = _load_oauth_token()\n         if _prefers_gcloud() and _load_gcloud_adc() is not None:\n+            # Chosen with CLAUDE_SEO_GOOGLE_AUTH=adc: used first, so reported first.\n             result[\"available\"] = True\n             result[\"method\"] = \"gcloud_adc\"\n             result[\"account\"] = _load_gcloud_adc().get(\"account\")\n@@ -787,6 +794,12 @@\n Google SEO API Setup Instructions\n =================================\n \n+FASTEST, FOR PROPERTIES YOU OWN: use your own Google account\n+   gcloud auth application-default login \\\\\n+     --scopes=https://www.googleapis.com/auth/webmasters.readonly,https://www.googleapis.com/auth/cloud-platform\n+   Then set CLAUDE_SEO_GOOGLE_AUTH=adc (needed only if a service account is\n+   also configured). Add an API key (step 3) for PageSpeed and CrUX.\n+\n 1. CREATE A GOOGLE CLOUD PROJECT\n    - Go to https://console.cloud.google.com\n    - Create a new project (or select existing)\n"
+    },
+    {
+      "name": "schema_generate.py",
+      "status": "MODIFIED",
+      "path_local": "scripts/schema_generate.py",
+      "path_upstream": "upstream-claude-seo/scripts/schema_generate.py",
+      "is_protected": true,
+      "protection_reason": "Contains custom author profile metadata in docstrings.",
+      "antigravity_rule": "Preserve author profile 'Syed Mesum Ali Shah' in examples.",
+      "diff": "--- local/schema_generate.py\n+++ upstream/schema_generate.py\n@@ -34,9 +34,10 @@\n         --date 2026-05-12T14:00:00Z\n \n     python scripts/schema_generate.py profile \\\\\n-        --name \"Syed Mesum Ali Shah\" \\\\\n-        --url https://www.mesumali.xyz \\\\\n-        --same-as https://www.linkedin.com/in/mesumali-dev \\\\\n+        --name \"Daniel Agrici\" \\\\\n+        --url https://agricidaniel.com/about \\\\\n+        --same-as https://github.com/AgriciDaniel \\\\\n+                  https://twitter.com/agricidaniel \\\\\n         --knows-about \"SEO\" \"Schema markup\" \"Core Web Vitals\"\n \n All generators emit JSON-LD with ``@context: https://schema.org`` and\n"
+    }
+  ],
+  "references_and_assets": [],
+  "skill_prompts": [
+    {
+      "skill": "seo-agentic",
+      "path_local": ".agents/skills/seo-agentic/SKILL.md",
+      "path_upstream": "upstream-claude-seo/skills/seo-agentic/SKILL.md",
+      "diff": "--- local/SKILL.md\n+++ upstream/SKILL.md\n@@ -11,7 +11,7 @@\n license: MIT\n metadata:\n   author: AgriciDaniel\n-  version: \"2.4.1\"\n+  version: \"2.4.2\"\n   category: seo\n ---\n \n",
+      "instruction": "Update skill instructions/version but strictly preserve Syed Mesum Ali Shah author footer."
+    },
+    {
+      "skill": "seo-audit",
+      "path_local": ".agents/skills/seo-audit/SKILL.md",
+      "path_upstream": "upstream-claude-seo/skills/seo-audit/SKILL.md",
+      "diff": "--- local/SKILL.md\n+++ upstream/SKILL.md\n@@ -6,7 +6,7 @@\n license: MIT\n metadata:\n   author: AgriciDaniel\n-  version: \"2.4.1\"\n+  version: \"2.4.2\"\n   category: seo\n ---\n \n",
+      "instruction": "Update skill instructions/version but strictly preserve Syed Mesum Ali Shah author footer."
+    },
+    {
+      "skill": "seo-backlinks",
+      "path_local": ".agents/skills/seo-backlinks/SKILL.md",
+      "path_upstream": "upstream-claude-seo/skills/seo-backlinks/SKILL.md",
+      "diff": "--- local/SKILL.md\n+++ upstream/SKILL.md\n@@ -7,7 +7,7 @@\n compatibility: \"Free: Common Crawl + verify always available. Optional: Moz API, Bing Webmaster, Keywords Everywhere (free signup). Premium: DataForSEO extension.\"\n metadata:\n   author: AgriciDaniel\n-  version: \"2.4.1\"\n+  version: \"2.4.2\"\n   category: seo\n ---\n \n",
+      "instruction": "Update skill instructions/version but strictly preserve Syed Mesum Ali Shah author footer."
+    },
+    {
+      "skill": "seo-cluster",
+      "path_local": ".agents/skills/seo-cluster/SKILL.md",
+      "path_upstream": "upstream-claude-seo/skills/seo-cluster/SKILL.md",
+      "diff": "--- local/SKILL.md\n+++ upstream/SKILL.md\n@@ -10,7 +10,7 @@\n metadata:\n   author: AgriciDaniel\n   original_author: \"Lutfiya Miller (Pro Hub Challenge Winner)\"\n-  version: \"2.4.1\"\n+  version: \"2.4.2\"\n   category: seo\n ---\n \n",
+      "instruction": "Update skill instructions/version but strictly preserve Syed Mesum Ali Shah author footer."
+    },
+    {
+      "skill": "seo-competitor-pages",
+      "path_local": ".agents/skills/seo-competitor-pages/SKILL.md",
+      "path_upstream": "upstream-claude-seo/skills/seo-competitor-pages/SKILL.md",
+      "diff": "--- local/SKILL.md\n+++ upstream/SKILL.md\n@@ -11,7 +11,7 @@\n license: MIT\n metadata:\n   author: AgriciDaniel\n-  version: \"2.4.1\"\n+  version: \"2.4.2\"\n   category: seo\n ---\n \n",
+      "instruction": "Update skill instructions/version but strictly preserve Syed Mesum Ali Shah author footer."
+    },
+    {
+      "skill": "seo-content",
+      "path_local": ".agents/skills/seo-content/SKILL.md",
+      "path_upstream": "upstream-claude-seo/skills/seo-content/SKILL.md",
+      "diff": "--- local/SKILL.md\n+++ upstream/SKILL.md\n@@ -10,7 +10,7 @@\n license: MIT\n metadata:\n   author: AgriciDaniel\n-  version: \"2.4.1\"\n+  version: \"2.4.2\"\n   category: seo\n ---\n \n",
+      "instruction": "Update skill instructions/version but strictly preserve Syed Mesum Ali Shah author footer."
+    },
+    {
+      "skill": "seo-dataforseo",
+      "path_local": ".agents/skills/seo-dataforseo/SKILL.md",
+      "path_upstream": "upstream-claude-seo/skills/seo-dataforseo/SKILL.md",
+      "diff": "--- local/SKILL.md\n+++ upstream/SKILL.md\n@@ -13,7 +13,7 @@\n compatibility: \"Requires DataForSEO MCP server\"\n metadata:\n   author: AgriciDaniel\n-  version: \"2.4.1\"\n+  version: \"2.4.2\"\n   category: seo\n ---\n \n",
+      "instruction": "Update skill instructions/version but strictly preserve Syed Mesum Ali Shah author footer."
+    },
+    {
+      "skill": "seo-drift",
+      "path_local": ".agents/skills/seo-drift/SKILL.md",
+      "path_upstream": "upstream-claude-seo/skills/seo-drift/SKILL.md",
+      "diff": "--- local/SKILL.md\n+++ upstream/SKILL.md\n@@ -12,7 +12,7 @@\n metadata:\n   author: AgriciDaniel\n   original_author: \"Dan Colta (Pro Hub Challenge)\"\n-  version: \"2.4.1\"\n+  version: \"2.4.2\"\n   category: seo\n ---\n \n",
+      "instruction": "Update skill instructions/version but strictly preserve Syed Mesum Ali Shah author footer."
+    },
+    {
+      "skill": "seo-ecommerce",
+      "path_local": ".agents/skills/seo-ecommerce/SKILL.md",
+      "path_upstream": "upstream-claude-seo/skills/seo-ecommerce/SKILL.md",
+      "diff": "--- local/SKILL.md\n+++ upstream/SKILL.md\n@@ -11,7 +11,7 @@\n metadata:\n   author: AgriciDaniel\n   original_author: \"Matej Marjanovic (Pro Hub Challenge)\"\n-  version: \"2.4.1\"\n+  version: \"2.4.2\"\n   category: seo\n ---\n \n",
+      "instruction": "Update skill instructions/version but strictly preserve Syed Mesum Ali Shah author footer."
+    },
+    {
+      "skill": "seo-flow",
+      "path_local": ".agents/skills/seo-flow/SKILL.md",
+      "path_upstream": "upstream-claude-seo/skills/seo-flow/SKILL.md",
+      "diff": "--- local/SKILL.md\n+++ upstream/SKILL.md\n@@ -11,7 +11,7 @@\n license: MIT\n metadata:\n   author: AgriciDaniel\n-  version: \"2.4.1\"\n+  version: \"2.4.2\"\n   category: seo\n ---\n \n",
+      "instruction": "Update skill instructions/version but strictly preserve Syed Mesum Ali Shah author footer."
+    },
+    {
+      "skill": "seo-geo",
+      "path_local": ".agents/skills/seo-geo/SKILL.md",
+      "path_upstream": "upstream-claude-seo/skills/seo-geo/SKILL.md",
+      "diff": "--- local/SKILL.md\n+++ upstream/SKILL.md\n@@ -9,7 +9,7 @@\n license: MIT\n metadata:\n   author: AgriciDaniel\n-  version: \"2.4.1\"\n+  version: \"2.4.2\"\n   category: seo\n ---\n \n",
+      "instruction": "Update skill instructions/version but strictly preserve Syed Mesum Ali Shah author footer."
+    },
+    {
+      "skill": "seo-google",
+      "path_local": ".agents/skills/seo-google/SKILL.md",
+      "path_upstream": "upstream-claude-seo/skills/seo-google/SKILL.md",
+      "diff": "--- local/SKILL.md\n+++ upstream/SKILL.md\n@@ -12,7 +12,7 @@\n license: MIT\n metadata:\n   author: AgriciDaniel\n-  version: \"2.4.1\"\n+  version: \"2.4.2\"\n   category: seo\n ---\n \n",
+      "instruction": "Update skill instructions/version but strictly preserve Syed Mesum Ali Shah author footer."
+    },
+    {
+      "skill": "seo-hreflang",
+      "path_local": ".agents/skills/seo-hreflang/SKILL.md",
+      "path_upstream": "upstream-claude-seo/skills/seo-hreflang/SKILL.md",
+      "diff": "--- local/SKILL.md\n+++ upstream/SKILL.md\n@@ -10,7 +10,7 @@\n license: MIT\n metadata:\n   author: AgriciDaniel\n-  version: \"2.4.1\"\n+  version: \"2.4.2\"\n   category: seo\n ---\n \n",
+      "instruction": "Update skill instructions/version but strictly preserve Syed Mesum Ali Shah author footer."
+    },
+    {
+      "skill": "seo-image-gen",
+      "path_local": ".agents/skills/seo-image-gen/SKILL.md",
+      "path_upstream": "upstream-claude-seo/skills/seo-image-gen/SKILL.md",
+      "diff": "--- local/SKILL.md\n+++ upstream/SKILL.md\n@@ -7,7 +7,7 @@\n compatibility: \"Requires nanobanana MCP server\"\n metadata:\n   author: AgriciDaniel\n-  version: \"2.4.1\"\n+  version: \"2.4.2\"\n   category: seo\n ---\n \n",
+      "instruction": "Update skill instructions/version but strictly preserve Syed Mesum Ali Shah author footer."
+    },
+    {
+      "skill": "seo-images",
+      "path_local": ".agents/skills/seo-images/SKILL.md",
+      "path_upstream": "upstream-claude-seo/skills/seo-images/SKILL.md",
+      "diff": "--- local/SKILL.md\n+++ upstream/SKILL.md\n@@ -12,7 +12,7 @@\n license: MIT\n metadata:\n   author: AgriciDaniel\n-  version: \"2.4.1\"\n+  version: \"2.4.2\"\n   category: seo\n ---\n \n",
+      "instruction": "Update skill instructions/version but strictly preserve Syed Mesum Ali Shah author footer."
+    },
+    {
+      "skill": "seo-local",
+      "path_local": ".agents/skills/seo-local/SKILL.md",
+      "path_upstream": "upstream-claude-seo/skills/seo-local/SKILL.md",
+      "diff": "--- local/SKILL.md\n+++ upstream/SKILL.md\n@@ -9,7 +9,7 @@\n license: MIT\n metadata:\n   author: AgriciDaniel\n-  version: \"2.4.1\"\n+  version: \"2.4.2\"\n   category: seo\n ---\n \n",
+      "instruction": "Update skill instructions/version but strictly preserve Syed Mesum Ali Shah author footer."
+    },
+    {
+      "skill": "seo-maps",
+      "path_local": ".agents/skills/seo-maps/SKILL.md",
+      "path_upstream": "upstream-claude-seo/skills/seo-maps/SKILL.md",
+      "diff": "--- local/SKILL.md\n+++ upstream/SKILL.md\n@@ -14,7 +14,7 @@\n compatibility: \"DataForSEO MCP for Tier 1+, Google Maps API for Tier 2\"\n metadata:\n   author: AgriciDaniel\n-  version: \"2.4.1\"\n+  version: \"2.4.2\"\n   category: seo\n ---\n \n@@ -84,6 +84,12 @@\n 5. Find target business rank at each point\n 6. Calculate SoLV: `(top_3_count / total_points) * 100`\n 7. Render ASCII heatmap in output\n+8. Save the grid for later comparison and for the seo-cockpit Maps view:\n+   `{business-slug}-maps/geo-grid-{keyword-slug}-{YYYY-MM-DD}.json` with\n+   `{\"business\", \"keyword\", \"location\", \"date\", \"size\", \"radius_km\", \"solv\",\n+   \"ranks\": [[...], ...]}`, where `ranks` is row-major from north-west to\n+   south-east and each cell is the business's rank at that point (an\n+   integer), or `null` when it is not in the results\n \n ### Cost Warning (REQUIRED)\n \n",
+      "instruction": "Update skill instructions/version but strictly preserve Syed Mesum Ali Shah author footer."
+    },
+    {
+      "skill": "seo-page",
+      "path_local": ".agents/skills/seo-page/SKILL.md",
+      "path_upstream": "upstream-claude-seo/skills/seo-page/SKILL.md",
+      "diff": "--- local/SKILL.md\n+++ upstream/SKILL.md\n@@ -8,7 +8,7 @@\n license: MIT\n metadata:\n   author: AgriciDaniel\n-  version: \"2.4.1\"\n+  version: \"2.4.2\"\n   category: seo\n ---\n \n",
+      "instruction": "Update skill instructions/version but strictly preserve Syed Mesum Ali Shah author footer."
+    },
+    {
+      "skill": "seo-plan",
+      "path_local": ".agents/skills/seo-plan/SKILL.md",
+      "path_upstream": "upstream-claude-seo/skills/seo-plan/SKILL.md",
+      "diff": "--- local/SKILL.md\n+++ upstream/SKILL.md\n@@ -11,7 +11,7 @@\n license: MIT\n metadata:\n   author: AgriciDaniel\n-  version: \"2.4.1\"\n+  version: \"2.4.2\"\n   category: seo\n ---\n \n",
+      "instruction": "Update skill instructions/version but strictly preserve Syed Mesum Ali Shah author footer."
+    },
+    {
+      "skill": "seo-programmatic",
+      "path_local": ".agents/skills/seo-programmatic/SKILL.md",
+      "path_upstream": "upstream-claude-seo/skills/seo-programmatic/SKILL.md",
+      "diff": "--- local/SKILL.md\n+++ upstream/SKILL.md\n@@ -11,7 +11,7 @@\n license: MIT\n metadata:\n   author: AgriciDaniel\n-  version: \"2.4.1\"\n+  version: \"2.4.2\"\n   category: seo\n ---\n \n",
+      "instruction": "Update skill instructions/version but strictly preserve Syed Mesum Ali Shah author footer."
+    },
+    {
+      "skill": "seo-schema",
+      "path_local": ".agents/skills/seo-schema/SKILL.md",
+      "path_upstream": "upstream-claude-seo/skills/seo-schema/SKILL.md",
+      "diff": "--- local/SKILL.md\n+++ upstream/SKILL.md\n@@ -8,7 +8,7 @@\n license: MIT\n metadata:\n   author: AgriciDaniel\n-  version: \"2.4.1\"\n+  version: \"2.4.2\"\n   category: seo\n ---\n \n",
+      "instruction": "Update skill instructions/version but strictly preserve Syed Mesum Ali Shah author footer."
+    },
+    {
+      "skill": "seo-sitemap",
+      "path_local": ".agents/skills/seo-sitemap/SKILL.md",
+      "path_upstream": "upstream-claude-seo/skills/seo-sitemap/SKILL.md",
+      "diff": "--- local/SKILL.md\n+++ upstream/SKILL.md\n@@ -9,7 +9,7 @@\n license: MIT\n metadata:\n   author: AgriciDaniel\n-  version: \"2.4.1\"\n+  version: \"2.4.2\"\n   category: seo\n ---\n \n",
+      "instruction": "Update skill instructions/version but strictly preserve Syed Mesum Ali Shah author footer."
+    },
+    {
+      "skill": "seo-sxo",
+      "path_local": ".agents/skills/seo-sxo/SKILL.md",
+      "path_upstream": "upstream-claude-seo/skills/seo-sxo/SKILL.md",
+      "diff": "--- local/SKILL.md\n+++ upstream/SKILL.md\n@@ -10,7 +10,7 @@\n metadata:\n   author: AgriciDaniel\n   original_author: \"Florian Schmitz (Pro Hub Challenge)\"\n-  version: \"2.4.1\"\n+  version: \"2.4.2\"\n   category: seo\n ---\n \n",
+      "instruction": "Update skill instructions/version but strictly preserve Syed Mesum Ali Shah author footer."
+    },
+    {
+      "skill": "seo-technical",
+      "path_local": ".agents/skills/seo-technical/SKILL.md",
+      "path_upstream": "upstream-claude-seo/skills/seo-technical/SKILL.md",
+      "diff": "--- local/SKILL.md\n+++ upstream/SKILL.md\n@@ -9,7 +9,7 @@\n license: MIT\n metadata:\n   author: AgriciDaniel\n-  version: \"2.4.1\"\n+  version: \"2.4.2\"\n   category: seo\n ---\n \n",
+      "instruction": "Update skill instructions/version but strictly preserve Syed Mesum Ali Shah author footer."
+    }
+  ],
+  "agents": [
+    {
+      "name": "seo-agentic.md",
+      "status": "MODIFIED",
+      "path_local": ".agents/agents/seo-agentic.md",
+      "path_upstream": "upstream-claude-seo/agents/seo-agentic.md",
+      "instruction": "Port updated system prompt into .agents/agents while maintaining Antigravity YAML frontmatter and tools."
+    },
+    {
+      "name": "seo-backlinks.md",
+      "status": "MODIFIED",
+      "path_local": ".agents/agents/seo-backlinks.md",
+      "path_upstream": "upstream-claude-seo/agents/seo-backlinks.md",
+      "instruction": "Port updated system prompt into .agents/agents while maintaining Antigravity YAML frontmatter and tools."
+    },
+    {
+      "name": "seo-cluster.md",
+      "status": "MODIFIED",
+      "path_local": ".agents/agents/seo-cluster.md",
+      "path_upstream": "upstream-claude-seo/agents/seo-cluster.md",
+      "instruction": "Port updated system prompt into .agents/agents while maintaining Antigravity YAML frontmatter and tools."
+    },
+    {
+      "name": "seo-content.md",
+      "status": "MODIFIED",
+      "path_local": ".agents/agents/seo-content.md",
+      "path_upstream": "upstream-claude-seo/agents/seo-content.md",
+      "instruction": "Port updated system prompt into .agents/agents while maintaining Antigravity YAML frontmatter and tools."
+    },
+    {
+      "name": "seo-dataforseo.md",
+      "status": "MODIFIED",
+      "path_local": ".agents/agents/seo-dataforseo.md",
+      "path_upstream": "upstream-claude-seo/agents/seo-dataforseo.md",
+      "instruction": "Port updated system prompt into .agents/agents while maintaining Antigravity YAML frontmatter and tools."
+    },
+    {
+      "name": "seo-drift.md",
+      "status": "MODIFIED",
+      "path_local": ".agents/agents/seo-drift.md",
+      "path_upstream": "upstream-claude-seo/agents/seo-drift.md",
+      "instruction": "Port updated system prompt into .agents/agents while maintaining Antigravity YAML frontmatter and tools."
+    },
+    {
+      "name": "seo-ecommerce.md",
+      "status": "MODIFIED",
+      "path_local": ".agents/agents/seo-ecommerce.md",
+      "path_upstream": "upstream-claude-seo/agents/seo-ecommerce.md",
+      "instruction": "Port updated system prompt into .agents/agents while maintaining Antigravity YAML frontmatter and tools."
+    },
+    {
+      "name": "seo-flow.md",
+      "status": "MODIFIED",
+      "path_local": ".agents/agents/seo-flow.md",
+      "path_upstream": "upstream-claude-seo/agents/seo-flow.md",
+      "instruction": "Port updated system prompt into .agents/agents while maintaining Antigravity YAML frontmatter and tools."
+    },
+    {
+      "name": "seo-geo.md",
+      "status": "MODIFIED",
+      "path_local": ".agents/agents/seo-geo.md",
+      "path_upstream": "upstream-claude-seo/agents/seo-geo.md",
+      "instruction": "Port updated system prompt into .agents/agents while maintaining Antigravity YAML frontmatter and tools."
+    },
+    {
+      "name": "seo-google.md",
+      "status": "MODIFIED",
+      "path_local": ".agents/agents/seo-google.md",
+      "path_upstream": "upstream-claude-seo/agents/seo-google.md",
+      "instruction": "Port updated system prompt into .agents/agents while maintaining Antigravity YAML frontmatter and tools."
+    },
+    {
+      "name": "seo-image-gen.md",
+      "status": "MODIFIED",
+      "path_local": ".agents/agents/seo-image-gen.md",
+      "path_upstream": "upstream-claude-seo/agents/seo-image-gen.md",
+      "instruction": "Port updated system prompt into .agents/agents while maintaining Antigravity YAML frontmatter and tools."
+    },
+    {
+      "name": "seo-local.md",
+      "status": "MODIFIED",
+      "path_local": ".agents/agents/seo-local.md",
+      "path_upstream": "upstream-claude-seo/agents/seo-local.md",
+      "instruction": "Port updated system prompt into .agents/agents while maintaining Antigravity YAML frontmatter and tools."
+    },
+    {
+      "name": "seo-maps.md",
+      "status": "MODIFIED",
+      "path_local": ".agents/agents/seo-maps.md",
+      "path_upstream": "upstream-claude-seo/agents/seo-maps.md",
+      "instruction": "Port updated system prompt into .agents/agents while maintaining Antigravity YAML frontmatter and tools."
+    },
+    {
+      "name": "seo-performance.md",
+      "status": "MODIFIED",
+      "path_local": ".agents/agents/seo-performance.md",
+      "path_upstream": "upstream-claude-seo/agents/seo-performance.md",
+      "instruction": "Port updated system prompt into .agents/agents while maintaining Antigravity YAML frontmatter and tools."
+    },
+    {
+      "name": "seo-schema.md",
+      "status": "MODIFIED",
+      "path_local": ".agents/agents/seo-schema.md",
+      "path_upstream": "upstream-claude-seo/agents/seo-schema.md",
+      "instruction": "Port updated system prompt into .agents/agents while maintaining Antigravity YAML frontmatter and tools."
+    },
+    {
+      "name": "seo-sitemap.md",
+      "status": "MODIFIED",
+      "path_local": ".agents/agents/seo-sitemap.md",
+      "path_upstream": "upstream-claude-seo/agents/seo-sitemap.md",
+      "instruction": "Port updated system prompt into .agents/agents while maintaining Antigravity YAML frontmatter and tools."
+    },
+    {
+      "name": "seo-sxo.md",
+      "status": "MODIFIED",
+      "path_local": ".agents/agents/seo-sxo.md",
+      "path_upstream": "upstream-claude-seo/agents/seo-sxo.md",
+      "instruction": "Port updated system prompt into .agents/agents while maintaining Antigravity YAML frontmatter and tools."
+    },
+    {
+      "name": "seo-technical.md",
+      "status": "MODIFIED",
+      "path_local": ".agents/agents/seo-technical.md",
+      "path_upstream": "upstream-claude-seo/agents/seo-technical.md",
+      "instruction": "Port updated system prompt into .agents/agents while maintaining Antigravity YAML frontmatter and tools."
+    },
+    {
+      "name": "seo-visual.md",
+      "status": "MODIFIED",
+      "path_local": ".agents/agents/seo-visual.md",
+      "path_upstream": "upstream-claude-seo/agents/seo-visual.md",
+      "instruction": "Port updated system prompt into .agents/agents while maintaining Antigravity YAML frontmatter and tools."
+    }
+  ],
+  "dependencies": []
+}

@@ -1,0 +1,18 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+**/*.pyc
+**/__pycache__/
+
+# Virtual Environment
+.venv/
+env/
+venv/
+
+# Audit outputs, temporary test dumps and logs
+*-audit/
+*.bak
+*.log
+.coverage
+htmlcov/

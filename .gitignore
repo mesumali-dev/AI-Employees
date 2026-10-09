@@ -1,0 +1,31 @@
+# Playwright dumps & MCP session logs
+**/.playwright-mcp/
+**/.playwright/
+**/playwright-report/
+**/test-results/
+
+# Python Virtual Environments
+**/.venv/
+**/venv/
+**/env/
+**/ENV/
+
+# Python Bytecode & Caches
+**/__pycache__/
+**/*.py[cod]
+**/*.pyc
+**/*.pyo
+**/.pytest_cache/
+**/.ruff_cache/
+
+# Node modules
+**/node_modules/
+
+# Logs & Temporary Files
+**/*.log
+**/*.bak
+**/*.tmp
+**/scratch/
+
+# Audit dumps
+**/*-audit/
