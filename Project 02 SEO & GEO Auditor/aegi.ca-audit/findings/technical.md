@@ -1,103 +1,71 @@
-# Technical SEO Audit Findings — AEGI.ca
+# Technical SEO Audit Findings — aegi.ca
 
-## 1. Executive Summary
-- **Target URL**: https://www.aegi.ca/
-- **Hosting / Platform**: Next.js App Router (SSG/ISR) on Vercel CDN
-- **Total Indexed Pages in Sitemap**: 34 URLs
-- **Broken Internal Links**: 0 (100% crawl success rate)
-- **Technical Health Score**: 72 / 100
+**Target Domain:** `https://www.aegi.ca/`  
+**Host Environment:** Next.js on Vercel Edge Network  
+**Technical Score:** 78 / 100
 
 ---
 
-## 2. Findings & Evidence
+## 1. Crawlability & Canonicalization
 
-### TECH-01 (High): Legacy WordPress Directives in `robots.txt` on a Next.js Site
-* **Specific Observation (Evidence)**:
-  `https://www.aegi.ca/robots.txt` contains:
-  ```text
-  User-Agent: *
-  Allow: /
-  Disallow: /private/
-  Disallow: /admin/
-  Disallow: /api/
-  Disallow: /shop/
-  Disallow: /shop
-  Disallow: /wp-content/
-  Disallow: /wp-admin/
-  Disallow: /wp-includes/
-  Disallow: /wp-json/
-  ```
-  The site is fully built on Next.js/Vercel, yet contains legacy WordPress paths (`/wp-content/`, `/wp-includes/`). Furthermore, it lacks explicit crawl guidance for AI search and training bots (GPTBot, ClaudeBot, PerplexityBot, Google-Extended).
-* **Concrete Action Step**:
-  Replace `robots.txt` with a clean Next.js configuration. Add dedicated AI search crawler rules:
-  ```text
-  User-Agent: *
-  Allow: /
-  Disallow: /api/
-  Disallow: /admin/
-
-  # AI Search & Retrieval Crawlers (Allow)
-  User-agent: OAI-SearchBot
-  Allow: /
-
-  User-agent: Claude-SearchBot
-  Allow: /
-
-  User-agent: PerplexityBot
-  Allow: /
-
-  Sitemap: https://www.aegi.ca/sitemap.xml
-  ```
-* **Leading Indicator**: Search console robots.txt fetcher validates 0 syntax warnings and 0 legacy crawl queries within 48 hours.
-* **Falsifiability Test**: If access logs show 404 crawler attempts on non-existent `/wp-admin/` or if AI search engines fail to cite site content within 30 days, the robots configuration failed to clarify site architecture.
+### Finding 1.1: Multi-Hop Canonical Redirect Chain on HTTP & Non-WWW
+- **Specific Observation (Evidence):**
+  - Request to `http://aegi.ca` issues `308 Permanent Redirect` to `https://aegi.ca/`, which then issues a second `308 Permanent Redirect` to `https://www.aegi.ca/`.
+  - Request to `https://aegi.ca/electrical-engineering/` issues `308` to `/electrical-engineering`, which issues a second `308` to `https://www.aegi.ca/services/electrical-engineering`.
+  - In Google Search Console, `http://aegi.ca/` and legacy WordPress URLs (`/electrical-engineering/`, `/mechanical-hvac/`) still appear with residual impressions.
+- **Concrete Action Step:**
+  - In `next.config.js` or Vercel routing configuration, collapse all HTTP, non-WWW, and legacy trailing-slash rules into single-hop 301/308 redirects directly to the canonical destination:
+    `http://aegi.ca/*` ➔ `https://www.aegi.ca/*`
+    `/:legacy-service/` ➔ `https://www.aegi.ca/services/:legacy-service`
+- **Leading Indicator:**
+  - Running `curl -IL http://aegi.ca` yields exactly 1 redirect hop (`HTTP/2 308` followed immediately by `HTTP/2 200` from `https://www.aegi.ca/`).
+- **Falsifiability Test:**
+  - If a curl trace still records more than 1 redirect hop or if GSC reports `Page with redirect` count climbing for legacy URLs after 28 days, this fix has failed.
 
 ---
 
-### TECH-02 (Medium): Multi-Hop Redirect Chain on Non-Secure / Non-WWW Variants
-* **Specific Observation (Evidence)**:
-  Requesting `http://aegi.ca` produces a two-hop redirect chain:
-  `http://aegi.ca` $\rightarrow$ `308 https://aegi.ca/` $\rightarrow$ `301 https://www.aegi.ca/`.
-* **Concrete Action Step**:
-  Configure edge redirect rules in `vercel.json` or DNS-level domain forwarding to redirect `http://aegi.ca`, `http://www.aegi.ca`, and `https://aegi.ca` directly to `https://www.aegi.ca/` in a single 301 hop.
-* **Leading Indicator**: `curl -ILs http://aegi.ca` outputs exactly one 301 response code before reaching `https://www.aegi.ca/` (200 OK).
-* **Falsifiability Test**: If testing any protocol/host combination results in `chain length > 1`, redirect edge configuration is incomplete.
+### Finding 1.2: Root Canonical Tag Trailing Slash Discrepancy
+- **Specific Observation (Evidence):**
+  - The rendered homepage HTML declares: `<link rel="canonical" href="https://www.aegi.ca">` (without a trailing slash).
+  - The server default and Google-selected canonical URL is `https://www.aegi.ca/` (with a trailing slash).
+  - Google URL Inspection confirms: `google_canonical: https://www.aegi.ca/`.
+- **Concrete Action Step:**
+  - Update Next.js `metadata.alternates.canonical` in `app/page.tsx` or `app/layout.tsx` to include the canonical trailing slash: `https://www.aegi.ca/`.
+- **Leading Indicator:**
+  - HTML `<link rel="canonical">` matches the exact URL returned in HTTP headers (`https://www.aegi.ca/`).
+- **Falsifiability Test:**
+  - If URL Inspection in GSC flags "User-declared canonical" different from "Google-selected canonical", the fix has failed.
 
 ---
 
-### TECH-03 (Medium): Missing Standard Security Headers
-* **Specific Observation (Evidence)**:
-  HTTP response inspection reveals `Strict-Transport-Security: max-age=63072000` is present, but the following headers are completely missing:
-  - `X-Frame-Options` (Clickjacking vulnerability)
-  - `X-Content-Type-Options: nosniff` (MIME sniffing prevention)
-  - `Referrer-Policy: strict-origin-when-cross-origin`
-  - `Content-Security-Policy`
-  - `Permissions-Policy`
-* **Concrete Action Step**:
-  Add standard security headers in `next.config.js` via the `headers()` configuration:
-  ```javascript
-  async headers() {
-    return [
-      {
-        source: '/(.*)',
-        headers: [
-          { key: 'X-Frame-Options', value: 'DENY' },
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
-          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' }
-        ],
-      },
-    ];
-  }
-  ```
-* **Leading Indicator**: Security header scanners (e.g. securityheaders.com) award grade A/A+ within 24 hours of deployment.
-* **Falsifiability Test**: If any page response header lacks `X-Content-Type-Options: nosniff` or `X-Frame-Options: DENY`, the deployment failed.
+## 2. Mobile Layout & Usability
+
+### Finding 2.1: Mobile Horizontal Overflow at 375px Viewport
+- **Specific Observation (Evidence):**
+  - Playwright mobile emulation at 375px width (iPhone standard viewport) detected `scrollWidth > innerWidth` (`horizontal_scroll: true`).
+  - Container width in navigation or service cards causes horizontal scrolling, damaging mobile user experience and Core Web Vitals stability.
+- **Concrete Action Step:**
+  - Inspect grid containers in the header and "Consultancy Insights" / "Our Work Values" sections. Add `overflow-x-hidden` on parent wrappers or clamp min-widths to `max-w-full`.
+- **Leading Indicator:**
+  - `document.documentElement.scrollWidth === window.innerWidth` across all viewports from 320px to 414px.
+- **Falsifiability Test:**
+  - If a headless Chromium test at 375x812 reports `document.documentElement.scrollWidth > 375`, the layout fix has failed.
 
 ---
 
-### TECH-04 (Low): Trailing Slash Normalization & Sitemaps Consistency
-* **Specific Observation (Evidence)**:
-  `sitemap.xml` lists all paths without trailing slashes (e.g. `https://www.aegi.ca/about`), which return 200 OK. Requests with trailing slashes (`https://www.aegi.ca/about/`) trigger 308 redirects to non-trailing slash versions. All canonical tags correctly declare the non-trailing slash variant.
-* **Concrete Action Step**:
-  Maintain strict enforcement of trailing slash canonicalization across all internal links, preventing unnecessary 308 redirect overhead for internal crawlers.
-* **Leading Indicator**: Internal link crawler reports 0 redirect hops on internal anchor paths.
-* **Falsifiability Test**: If internal links contain trailing slashes that trigger 308 redirects, internal linking QA failed.
+## 3. Semantic Heading Hierarchy
+
+### Finding 3.1: Heading Level Skips and Footer Non-Semantic Headings
+- **Specific Observation (Evidence):**
+  - The homepage hierarchy skips heading ranks: `H1` ("P.Eng Stamped Drawings...") is immediately followed by `H3` ("Quick Consultation Request"), skipping `H2`.
+  - Under `H2` ("Our Affiliations") and `H2` ("Consultancy Insights"), child items skip `H3` and jump directly to `H4`.
+  - Footer navigational columns use `H4` ("Quick Links", "Services", "Contact"), injecting non-content navigation text into document outline.
+- **Concrete Action Step:**
+  - Restructure heading hierarchy:
+    - Change consultation title to an `H2` or stylized `p` tag.
+    - Change affiliation cards and testimonial author names to semantic `H3` elements.
+    - Replace footer `H4` tags with `<p className="font-semibold text-sm">` inside semantic `<nav aria-label="Footer">` containers.
+- **Leading Indicator:**
+  - Running HTML outline validator outputs zero skipped heading levels (H1 ➔ H2 ➔ H3).
+- **Falsifiability Test:**
+  - If automated heading audit detects any jump from H1 directly to H3 or H2 directly to H4, the semantic fix has failed.

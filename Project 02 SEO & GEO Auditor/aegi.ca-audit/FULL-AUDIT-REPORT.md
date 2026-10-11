@@ -1,188 +1,208 @@
-# Full Website SEO & GEO Audit Report — AEGI.ca
+# Comprehensive Technical SEO & GEO Developer Audit Report: `aegi.ca`
 
-**Target Domain**: [https://www.aegi.ca](https://www.aegi.ca)  
-**Analyzed Scope**: 34 Crawled Sitemap URLs, Server-Rendered Next.js DOM, JSON-LD Schemas, HTTP Headers, Multi-Viewport Visual Assets, AI Agent Access  
-**Audit Date**: October 2026  
-**Auditor**: Antigravity Technical SEO, E-E-A-T & GEO Intelligence Suite  
-
----
-
-## 1. Executive Summary
-
-Advanced Engineering Group Inc. (**AEGI**) is an established, multidisciplinary engineering consulting firm based in Edmonton, Alberta, providing P.Eng-stamped engineering across civil, structural, mechanical, electrical, and project management disciplines.
-
-The website is engineered with a modern, high-performance stack: **Next.js (App Router)** hosted on the **Vercel Edge Network**. This grants the site an exceptional foundation for Core Web Vitals (sub-250ms TTFB, zero layout shift). However, significant on-page title template bugs, dead schema endpoints, missing article schemas, legacy crawl configuration, and anonymous author bylines suppress the site's organic search and AI search visibility.
-
-### Overall SEO Health Score: 71 / 100
-
-| Category | Weight | Score | Status |
-| :--- | :---: | :---: | :--- |
-| **Technical SEO** | 22% | **72 / 100** | ⚠️ Needs Clean-up (Legacy robots.txt, security headers) |
-| **Content Quality & E-E-A-T** | 23% | **74 / 100** | ⚠️ Strong Depth, Weak Individual Author Signals |
-| **On-Page SEO** | 20% | **68 / 100** | ❌ Systemic Title Double-Branding & SERP Truncation |
-| **Schema & Structured Data** | 10% | **64 / 100** | ❌ Dead SearchAction 404 Endpoint, No Blog Schema |
-| **Performance (CWV)** | 10% | **82 / 100** |  Good (Fast Vercel Edge TTFB, Minor Image Tuning) |
-| **AI Search Readiness (GEO)** | 10% | **58 / 100** | ⚠️ Missing llms.txt, No Direct Definition Passages |
-| **Images & Visual** | 5% | **85 / 100** |  Responsive, 0 Broken Images |
-| **Total Weighted Score** | **100%** | **71 / 100** | **Moderate Health — High Growth Potential** |
+**Target Website:** `https://www.aegi.ca/`  
+**Client:** Advanced Engineering Group Inc. (AEGI)  
+**Architecture:** Next.js (App Router), React, Tailwind CSS, Vercel Edge Network  
+**Overall SEO Health Score:** **81 / 100** (Grade: B+)  
+**Audit Date:** October 10, 2026  
+**Auditor Engine:** Read-Only Technical SEO & GEO Auditor + Verified Google Search Console API  
+**Auditing Posture:** Strictly Read-Only. No website files, server configurations, or GSC properties were modified.
 
 ---
 
-### Top 5 Critical & High-Impact Issues
+## 1. Executive Summary & GSC Context
 
-1. **Dead Sitelinks Searchbox (`SearchAction`) Target (HTTP 404)**: `WebSite` schema points search actions to `/search?q={search_term_string}` which does not exist, violating Google's structured data rules.
-2. **Systemic Title Tag Double-Branding**: Next.js title template concatenates `| AEGI | AEGI - Advanced Engineering Group Inc.`, inflating titles to 95–110 characters and truncating primary target keywords in Google SERPs.
-3. **Missing `BlogPosting` / `Article` Schema Across All 13 Blog Articles**: Google and AI engines cannot identify article authors, headlines, or dates in structured data.
-4. **Anonymous Engineering Bylines (E-E-A-T Deficiency)**: Deep, safety-critical civil and structural guides lack named P.Eng author bios and licensing numbers.
-5. **Missing `llms.txt` and AI Overview Passage Optimization**: Answer engines lack a clean machine-readable index, and articles lack direct definition summaries for featured snippet extraction.
+Advanced Engineering Group Inc. (`aegi.ca`) is an Alberta-based multi-disciplinary engineering consulting firm holding APEGA and NAPEG Permits to Practice.
 
----
+The website demonstrates a solid modern web baseline: fast edge delivery via Vercel, server-rendered semantic HTML, modern AVIF image compression, dedicated AI crawler rules in `robots.txt` (`GPTBot`, `Claude-SearchBot`, `PerplexityBot`), and structured entity credentials.
 
-### Top 5 Quick Wins
-
-1. **Fix `title.template` in `app/layout.tsx`**: Eliminate the double brand suffix and cap all titles under 60 characters.
-2. **Remove `potentialAction` from `WebSite` Schema**: Instantly resolve structured data validation errors.
-3. **Clean up `robots.txt`**: Strip out defunct WordPress rules (`/wp-content/`) and explicitly grant access to AI search bots (`OAI-SearchBot`, `Claude-SearchBot`, `PerplexityBot`).
-4. **Deploy `public/llms.txt`**: Publish an authoritative LLM index of AEGI's engineering services and provincial accreditations.
-5. **Add Standard Security Headers in `next.config.js`**: Enforce `X-Frame-Options: DENY` and `X-Content-Type-Options: nosniff`.
+However, an audit synthesizing live Google Search Console API inspection data, headless browser tests (Playwright), and HTTP tracing identified two categories of findings:
+1. **Misinterpreted GSC Indexing Reports (Expected Exclusions):** The client observed failed validation in GSC for *"Page with redirect"* and *"Crawled - currently not indexed"*. Our investigation proves that **neither issue represents an active penalty or website malfunction**. They failed validation because automated tests were triggered on URLs that are *supposed* to remain excluded (redirects and binary media assets).
+2. **Actionable Developer Findings (Genuine Issues):** Several easily rectifiable technical issues were confirmed, including review schema directional conflicts, canonical trailing-slash discrepancies, mobile viewport overflow at 375px, heading outline skips, and multi-hop legacy redirect chains.
 
 ---
 
-## 2. Technical SEO Audit
+## 2. Google Search Console Investigation
 
-### 2.1 Crawlability & Indexability
-- **Sitemap**: `https://www.aegi.ca/sitemap.xml` was validated via `scripts/sitemap_discovery.py`. All 34 URLs respond with HTTP 200 OK.
-- **Internal Link Integrity**: 35 internal link targets were audited across the domain; **0 broken links (404s)** and **0 internal redirect chains** were detected.
-- **Canonical Consistency**: Canonical tags are self-referencing and strictly enforce the non-trailing slash standard.
+### Category A: "Page with Redirect" (Validation Failed)
 
-### 2.2 Host & Protocol Normalization
-- Requesting `http://aegi.ca` results in a two-hop redirect chain:
-  $$\text{http://aegi.ca} \xrightarrow{308} \text{https://aegi.ca/} \xrightarrow{301} \text{https://www.aegi.ca/}$$
-  *Recommendation*: Update DNS/Vercel edge rules to redirect all HTTP and non-www requests to `https://www.aegi.ca/` in a single 301 hop.
+#### 1. Why Validation Failed
+In Google Search Console, *"Page with redirect"* is an informational log indicating that Google discovered a URL, followed its redirect (301 or 308), and excluded the source URL from the index in favor of the destination.
+- When **"Validate Fix"** is triggered, Google re-crawls sample URLs to confirm whether they stopped redirecting and now return unique `200 OK` content.
+- Because these URLs still redirect as intended, Google marked the validation as **"Failed"**.
+- **Conclusion:** Do not attempt to validate this report. The exclusion of redirecting URLs is the correct behavior.
 
-### 2.3 Robots.txt Configuration
-- `robots.txt` currently disallows:
-  `/wp-content/`, `/wp-admin/`, `/wp-includes/`, `/wp-json/`, `/shop/`
-  These are remnants from a legacy WordPress configuration and do not belong on a Next.js web application.
-  *Recommendation*: Clean `robots.txt` to remove legacy paths and explicitly govern AI search crawlers.
+#### 2. Itemized Verification of Sample URLs
 
-### 2.4 Security Headers
-- Present: `Strict-Transport-Security: max-age=63072000`
-- Missing: `X-Frame-Options`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and `Content-Security-Policy`.
-
----
-
-## 3. On-Page SEO & Metadata
-
-### 3.1 Title Tag Inflation & Double-Branding
-Next.js metadata templates incorrectly append multiple branding layers.
-- Target optimal length: **45–60 characters** (580px limit in Google SERPs)
-- Current blog titles: **90–110 characters**
-- *Example*:
-  `Haul Road Design: 7 Key Engineering Considerations | AEGI Alberta | AEGI - Advanced Engineering Group Inc.` (106 chars)
-  Google truncates this snippet before users can read the full title or value proposition.
-
-### 3.2 Meta Description Truncation
-- Target optimal length: **135–155 characters**
-- Current lengths: Multiple pages exceed 180–205 characters.
-- *Example*:
-  `AEGI provides oil and gas pipeline engineering in Alberta – CSA Z662-compliant design, corrosion protection, AER submissions, and stamped drawings from a professional engineering firm.` (184 chars)
-  *Fix*: Condense descriptions to 145 characters focusing on the primary keyword, region, and conversion incentive.
-
-### 3.3 Heading Architecture
-- Every page maintains exactly one `<h1>`.
-- Blog posts currently include internal system codes inside the `<h1>` (e.g. `PROTOCOL #008 Stormwater Management Design...`).
-- *Fix*: Move the "PROTOCOL #008" badge into a separate UI element above the heading to keep the `<h1>` semantically focused on target search intent.
+| Inspected URL | HTTP Status & Chain | Destination URL | Destination Indexable? | Root Cause Analysis | Action Required |
+|---|:---:|---|:---:|---|---|
+| `https://www.aegi.ca/services` | `301` (1 hop) | `https://www.aegi.ca/#services` | Yes (`200 OK`) | **Confirmed:** Custom redirect sends `/services` to homepage anchor hash. Googlebot strips `#services` and canonicalizes to homepage. | Keep as-is unless client requests a dedicated `/services` overview page. |
+| `https://www.aegi.ca/services/` | `308` ➔ `301` (2 hops) | `https://www.aegi.ca/#services` | Yes (`200 OK`) | **Confirmed:** Next.js strips trailing slash (`/services`), then redirects to `/#services`. | No action required. Expected exclusion. |
+| `https://www.aegi.ca/careers/` | `308` (1 hop) | `https://www.aegi.ca/careers` | Yes (`200 OK`) | **Confirmed:** Next.js default `trailingSlash: false` router normalizes to canonical `/careers`. | No action required. Expected exclusion. |
+| `https://aegi.ca/careers/` | `308` ➔ `308` (2 hops) | `https://www.aegi.ca/careers` | Yes (`200 OK`) | **Confirmed:** Trailing-slash strip occurs before Vercel domain forwarding. | Optional: Collapse in hosting routing. |
+| `http://aegi.ca/` | `308` ➔ `308` (2 hops) | `https://www.aegi.ca/` | Yes (`200 OK`) | **Confirmed:** Vercel edge terminates HTTP ➔ HTTPS before applying non-WWW ➔ WWW forwarding. | Optional: Vercel domain setting optimization. |
+| `https://aegi.ca/?q=f7l16y9bmlpzbz6` | `308` ➔ `301` (2 hops) | `https://www.aegi.ca/` | Yes (`200 OK`) | **Confirmed:** Scanner probe with 15-char query. Server strips unrecognized parameter and redirects to `/`. | No action required. Expected exclusion. |
 
 ---
 
-## 4. Schema & Structured Data
+### Category B: "Crawled - Currently Not Indexed" (Validation Failed Oct 5, 2026)
 
-```mermaid
-graph TD
-    A["Current State: Disconnected Schemas"] --> B["WebSite (Broken SearchAction 404)"]
-    A --> C["ProfessionalService (Repeated on all pages)"]
-    A --> D["FAQPage (Deprecated Google SERP Accordion)"]
-    A --> E["Missing: No BlogPosting Schema on 13 Articles"]
+#### 1. Why Validation Failed
+The client observed failed validation on October 5, 2026, for sample URLs:
+1. `https://aegi.ca/?q=fr9wumxba7dn1nu`
+2. `https://www.aegi.ca/services/electrical-engineering/inspection.avif`
+3. `https://www.aegi.ca/services/construction-support/construction_support.avif`
 
-    F["Recommended State: Consolidated @graph"] --> G["Organization (@id: #organization)"]
-    G --> H["WebSite (@id: #website)"]
-    G --> I["Service / ProfessionalService"]
-    G --> J["Dynamic BlogPosting Schema (With P.Eng Author)"]
-```
+When Google’s validation engine re-crawled these URLs, it determined that:
+- The query URL still redirects to the homepage instead of serving unique content.
+- Both `.avif` URLs return binary media streams (`Content-Type: image/avif`), not HTML documents.
+Because none of these URLs became indexed HTML web pages, Google recorded **"Validation Failed"**.
 
-### 4.1 Broken Sitelinks Searchbox
-The `WebSite` schema includes:
-```json
-"potentialAction": {
-  "@type": "SearchAction",
-  "target": "https://www.aegi.ca/search?q={search_term_string}"
-}
-```
-`https://www.aegi.ca/search` returns HTTP 404. Google requires `potentialAction` to point to a functioning query interface. Remove this until internal search is live.
+#### 2. Deep Dive: The Two AVIF Image URLs
+- **Binary & MIME Inspection:** `inspection.avif` (77.3 KB) and `construction_support.avif` (87.6 KB) were independently verified via HTTP GET. Both return `HTTP/2 200 OK`, valid headers, and binary `ftypavif` magic bytes.
+- **DOM Rendering Verification (Playwright):** Headless Chromium loaded `/services/electrical-engineering`. The image rendered with full natural dimensions (`1024×1024`, `complete: true`).
+- **Why GSC Crawled Them as Web Pages:** In Next.js, images are loaded via `/_next/image?url=%2Fservices%2F...%2Finspection.avif`. Googlebot’s web link parser extracts URL-encoded parameters from client-side bundles and queues them. When Googlebot fetched the URL, it discovered an image, not a web document.
+- **Sitemap & Links Check:** There are zero direct `<a>` anchor links to these files, and zero image entries in `sitemap.xml`.
+- **Conclusion:** These images belong in **Google Images**, not the Web Document Index. Their presence under *"Crawled - currently not indexed"* is standard Googlebot behavior. **Do not modify these image URLs.**
 
-### 4.2 Missing `BlogPosting` Markup
-None of the 13 technical articles provide `Article` or `BlogPosting` structured data. By adding dynamic `BlogPosting` JSON-LD with author, datePublished, headline, and publisher attributes, AEGI unlocks rich snippet visibility and entity indexing in Google Discover and Knowledge Graphs.
-
-### 4.3 Deprecated `FAQPage` Schema
-Google deprecated `FAQPage` rich results for commercial websites in May 2026. While the FAQ schema on `/about` and `/services/*` does not hurt indexation, team resources should be shifted toward visible, structured content rather than relying on FAQ accordion SERP features.
+#### 3. Deep Dive: The Random Query URL (`?q=fr9wumxba7dn1nu`)
+- **Evidence:** GSC URL Inspection records the referring URL as `https://aegi.ca/?q=flhuq65b6vxvxje`.
+- **Pattern:** 15-character alphanumeric probe (`f` + 14 chars), matching automated security scanning footprints (e.g. WPScan / Acunetix).
+- **Handling:** Resolves via a 2-hop redirect (`308` ➔ `301` ➔ `200`) back to the clean root homepage `https://www.aegi.ca/`.
+- **Conclusion:** Expected bot probe. Safely normalized by the application router.
 
 ---
 
-## 5. Content Quality & E-E-A-T Analysis
+## 3. Genuine Developer Findings (Actionable Issues)
 
-Audited using `scripts/content_quality.py`:
-- **Average Word Count**: 1,280 words per article (High technical depth)
-- **Quality Score**: 90/100 (High information density, negligible filler)
-- **Regulatory Backing**: Excellent citations of CSA Z662, CSA C22.1, API 650, and Alberta Building Codes.
-- **Critical Vulnerability**: Anonymous attribution. Under Google Quality Rater Guidelines, engineering and safety-critical content is treated with heightened scrutiny. Every guide should feature a dedicated byline:
-  *Written by [Name], P.Eng — Senior Structural / Civil Engineer, APEGA Permit #XXXXX.*
-
----
-
-## 6. Performance & Core Web Vitals (CWV)
-
-Lab testing via Playwright and network performance analysis:
-- **TTFB**: ~150ms – 240ms (Vercel CDN Edge Cache Hit)
-- **First Contentful Paint (FCP)**: ~0.8s – 1.1s
-- **Cumulative Layout Shift (CLS)**: < 0.05 (Passes Google Good threshold $\le 0.1$)
-- **Responsive Layout**: Validated across Desktop (1440px), Laptop (1280px), Tablet (768px), and Mobile (390px). 0 horizontal scroll overflow.
-- **Improvement Opportunity**: Logo requested with `w=3840` variant. Add explicit `sizes` attribute to `<Image>` to limit requests to $\le 384\text{px}$ on mobile.
+### Finding 1: Review Schema Directional Conflict
+- **Category:** Schema & Structured Data
+- **Severity:** High | **Priority:** P1
+- **Affected URLs:** `https://www.aegi.ca/`
+- **Data Source & Verification:** Google Search Console URL Inspection API (`richResults.detectedItems`).
+- **Evidence:** GSC returned 4 warnings under Review Snippets:
+  > *"A nested '<parent_node>' object can't contain the 'itemReviewed' field. Remove 'itemReviewed' to avoid directional conflict."*
+- **Root Cause (Confirmed):** The JSON-LD schema embeds individual reviews inside `ProfessionalService.review[]`. Each review declares `"itemReviewed": { "@id": "https://www.aegi.ca/#organization" }`. Because the review is already a child property of that organization, re-specifying `itemReviewed` causes a circular reference conflict.
+- **Impact:** Prevents Review Snippet rich results (stars) from displaying in Google SERPs.
+- **Recommended Remediation:** In the homepage schema component, remove the `"itemReviewed"` attribute from reviews that are nested inside `ProfessionalService`.
+- **Acceptance Criteria:** Google Rich Results Test passes with **0 warnings** on Review snippets.
 
 ---
 
-## 7. Generative Engine Optimization (GEO) & Agentic Readiness
-
-Audited via `scripts/agentic_check.py`:
-- **`llms.txt`**: 404 Not Found (Missing machine-readable directory for LLMs).
-- **AI Crawlers**: Currently allowed under general wildcard, but lack explicit governance rules.
-- **Passage-Level Answerability**: Long narrative prose without concise direct answer snippets. Adding 45–60 word "Executive Summary" boxes beneath primary headings will enable Google AI Overviews and Perplexity to quote AEGI directly as an authoritative engineering source.
-
----
-
-## 8. Multi-Viewport Visual Captures
-
-Screenshots have been generated and archived in `aegi.ca-audit/screenshots/`:
-- `www_aegi_ca_desktop.png` (1440x900 Desktop Viewport)
-- `www_aegi_ca_laptop.png` (1280x800 Laptop Viewport)
-- `www_aegi_ca_tablet.png` (768x1024 Tablet Viewport)
-- `www_aegi_ca_mobile.png` (390x844 Mobile Viewport)
-
-Visual analysis confirms that typography, navigation drawers, and mobile call buttons display cleanly without text clipping or layout overflow.
+### Finding 2: Root Canonical Tag Trailing-Slash Discrepancy
+- **Category:** Technical SEO / Indexation
+- **Severity:** Medium | **Priority:** P2
+- **Affected URLs:** `https://www.aegi.ca/`
+- **Data Source & Verification:** DOM inspection via Playwright vs. GSC URL Inspection API.
+- **Evidence:** 
+  - Rendered HTML source: `<link rel="canonical" href="https://www.aegi.ca">` (omits trailing slash).
+  - Server response & GSC Google-selected canonical: `https://www.aegi.ca/` (includes trailing slash).
+- **Root Cause (Confirmed):** Next.js `metadata.alternates.canonical` in `app/page.tsx` or `app/layout.tsx` is defined without the trailing slash.
+- **Impact:** Creates a soft canonical mismatch warning in search engines and minor crawl dilution.
+- **Recommended Remediation:** Update `metadata.alternates.canonical` to `https://www.aegi.ca/`.
+- **Acceptance Criteria:** HTML `<link rel="canonical">` output exactly matches `https://www.aegi.ca/`.
 
 ---
 
-## 9. Conclusion & Next Steps
-
-AEGI has an exceptional technical foundation with its Next.js architecture and comprehensive technical engineering articles. Resolving the title template bloat, removing the dead search schema endpoint, implementing `BlogPosting` structured data, deploying `llms.txt`, and introducing named P.Eng author bylines will immediately strengthen search rankings, click-through rates, and AI Overview citations.
-
-Refer to [ACTION-PLAN.md](file:///C:/Users/smesu/Desktop/New%20folder/seo/aegi.ca-audit/ACTION-PLAN.md) for step-by-step implementation sequencing.
+### Finding 3: Multi-Hop Redirect Chains on Legacy WordPress URLs
+- **Category:** Technical SEO / Crawl Efficiency
+- **Severity:** Medium | **Priority:** P2
+- **Affected URLs:** `https://aegi.ca/electrical-engineering/`, `/mechanical-hvac/`, old uploaded PDFs.
+- **Data Source & Verification:** Live HTTP request tracing (`requests.Session`).
+- **Evidence:** Request to `https://aegi.ca/electrical-engineering/` experiences 3 redirects:
+  `https://aegi.ca/electrical-engineering/` ➔ (308) `/electrical-engineering` ➔ (308) `https://www.aegi.ca/electrical-engineering` ➔ (308) `https://www.aegi.ca/services/electrical-engineering`.
+- **Root Cause (Confirmed):** Trailing-slash stripping, non-WWW forwarding, and legacy route mapping fire in sequence across separate infrastructure layers.
+- **Impact:** Wastes crawl budget and delays link-equity transfer from old external backlinks.
+- **Recommended Remediation:** In `next.config.js` `redirects()`, point legacy URLs directly to the absolute final destination:
+  ```javascript
+  // Illustrative guidance only
+  {
+    source: '/electrical-engineering',
+    destination: 'https://www.aegi.ca/services/electrical-engineering',
+    permanent: true,
+  }
+  ```
+- **Acceptance Criteria:** `curl -IL https://aegi.ca/electrical-engineering/` returns no more than 2 hops directly to the final destination.
 
 ---
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Audit Prepared & Verified by: Syed Mesum Ali Shah
-Full-Stack Engineer & Technical SEO Specialist
-🌐 Portfolio: https://www.mesumali.xyz
-💼 LinkedIn: https://www.linkedin.com/in/mesumali-dev
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+### Finding 4: Heading Hierarchy Irregularities & Footer Non-Semantic Headings
+- **Category:** On-Page SEO / Accessibility
+- **Severity:** Low | **Priority:** P3
+- **Affected URLs:** `https://www.aegi.ca/`
+- **Data Source & Verification:** BeautifulSoup DOM tree analysis of rendered HTML.
+- **Evidence:** 
+  - `H1` ("P.Eng Stamped Drawings...") is immediately followed by `H3` ("Quick Consultation Request"), skipping `H2`.
+  - Affiliation and Testimonial cards skip `H3` and jump from `H2` directly to `H4`.
+  - Footer navigational column headers ("Quick Links", "Services", "Contact") use `H4` tags.
+- **Root Cause (Confirmed):** Visual Tailwind heading classes were tied directly to HTML heading tags without semantic structuring.
+- **Impact:** Disrupts document outline for screen readers and search engine content parsers.
+- **Recommended Remediation:** Normalize document outline to sequential order (H1 ➔ H2 ➔ H3). Replace footer `H4` tags with `<p className="font-semibold">` inside `<nav aria-label="Footer">`.
+- **Acceptance Criteria:** HTML outline validator reports zero skipped heading ranks.
+
+---
+
+### Finding 5: Mobile Horizontal Overflow at 375px Viewport
+- **Category:** Mobile Usability & Core Web Vitals
+- **Severity:** Medium | **Priority:** P2
+- **Affected URLs:** `https://www.aegi.ca/`
+- **Data Source & Verification:** Playwright mobile emulation at 375×812 viewport.
+- **Evidence:** `document.documentElement.scrollWidth > window.innerWidth` (`horizontal_scroll: true`).
+- **Root Cause (Confirmed):** Grid containers in testimonial/affiliation sliders or header elements exceed 375px width.
+- **Impact:** Causes mobile horizontal scrolling, triggering mobile usability warnings and CLS instability.
+- **Recommended Remediation:** Add `overflow-x: hidden` on root layout wrappers and clamp inner card containers to `max-w-full`.
+- **Acceptance Criteria:** At 375px width, `document.documentElement.scrollWidth === 375` is true.
+
+---
+
+### Finding 6: Blog-to-Service Internal Linking Funnels
+- **Category:** Content Strategy & Information Architecture
+- **Severity:** Medium | **Priority:** P2
+- **Affected URLs:** 13 articles under `/blog/*`
+- **Data Source & Verification:** Content link audit across all 13 blog posts.
+- **Evidence:** Articles such as `/blog/achieve-project-goals-with-trusted-civil-engineering-consulting-services` receive organic impressions (183 impressions in GSC) but contain 0 in-body contextual links pointing to `/services/civil-engineering`.
+- **Root Cause (Confirmed):** Blog articles were published without inline commercial callouts or contextual cross-links.
+- **Impact:** High organic impressions fail to convert into service quote inquiries.
+- **Recommended Remediation:** Add 2 contextual editorial links per post pointing to relevant commercial service pages, plus an inquiry card banner at the end of each article.
+- **Acceptance Criteria:** Every published blog post contains at least 2 contextual links pointing to a relevant `/services/*` landing page.
+
+---
+
+## 4. Optional Enhancements (Future Consideration)
+
+1. **Striking-Distance Query Optimization (GSC Insights):**
+   - Query `"aegi"` ranks at Position 6.1 with 649 impressions but only 0.62% CTR.
+   - *Recommendation:* Update homepage title from `AEGI Engineering | P.Eng Certified Engineering in Alberta` to:  
+     `AEGI — Advanced Engineering Group Inc. | Licensed P.Eng in Alberta`.
+2. **Service Catalog Schema Graph:**
+   - Deploy structured `@type: "Service"` and `hasOfferCatalog` on individual service landing pages linked back to `@id: "https://www.aegi.ca/#organization"`.
+3. **AI Search Markdown Content Negotiation:**
+   - Configure a Next.js edge route handler to deliver clean Markdown representations when autonomous AI agents request pages with `Accept: text/markdown`.
+
+---
+
+## 5. Dangerous Changes to Avoid (Developer Anti-Patterns)
+
+| Proposed Change | Why It Is Dangerous | Status |
+|---|---|:---:|
+| **Adding `X-Robots-Tag: noindex` to AVIF images** | Instructs Google to remove engineering diagrams from **Google Image Search**. | ❌ **Rejected** |
+| **Adding generic `/:path+/` trailing-slash regexes in `next.config.js`** | Conflicts with Next.js built-in routing; risks infinite redirect loops and breaks static assets. | ❌ **Rejected** |
+| **Force-creating a `/services` overview page** | Unilaterally alters site information architecture and disrupts homepage anchor navigation without client approval. | ❌ **Rejected** |
+| **Re-clicking "Validate Fix" in GSC for expected exclusions** | Causes repeated automated validation failures because redirects and images are supposed to remain excluded. | ❌ **Rejected** |
+
+---
+
+## 6. Consolidated Developer Remediation Plan
+
+| Item | Issue Title | Severity | Priority | Estimated Effort | Target File / Location | Acceptance Test |
+|:---:|---|:---:|:---:|:---:|---|---|
+| **1** | Review Schema Directional Conflict | High | **P1** | 30 mins | `app/page.tsx` (JSON-LD block) | Google Rich Results Test passes with 0 warnings. |
+| **2** | Canonical Trailing-Slash Discrepancy | Medium | **P2** | 15 mins | `app/page.tsx` (`metadata.alternates.canonical`) | HTML source outputs `href="https://www.aegi.ca/"`. |
+| **3** | Mobile Horizontal Overflow (375px) | Medium | **P2** | 1–2 hrs | `app/layout.tsx` / `components/ui/*` | `scrollWidth === innerWidth` at 375px. |
+| **4** | Heading Outline Sequential Normalization | Low | **P3** | 1 hr | `app/page.tsx` & `components/Footer.tsx` | Heading outline validator outputs 0 level skips. |
+| **5** | Contextual Blog-to-Service Links | Medium | **P2** | 2 hrs | `app/blog/[slug]/page.tsx` / CMS Markdown | Minimum 2 contextual service links per blog post. |
+| **6** | Legacy WordPress Single-Hop Redirects | Low | **P3** | 30 mins | `next.config.js` (`redirects` array) | Trace shows direct 1-hop redirect to destination. |
+
+---
+
+**Audit Completed:** No modifications have been made to the website. This report and prioritized plan are finalized for handoff to your development team.

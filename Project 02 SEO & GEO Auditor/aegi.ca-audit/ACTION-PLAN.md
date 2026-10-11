@@ -1,231 +1,137 @@
-# Prioritized SEO Action Plan — AEGI.ca
+# Developer Remediation Plan: `aegi.ca`
 
-This document outlines the sequenced, falsifiable action roadmap for **Advanced Engineering Group Inc. (AEGI)**. Tasks are ordered strictly by business impact and dependency sequencing.
-
----
-
-## Dependency & Implementation Sequencing
-
-```mermaid
-flowchart TD
-    subgraph Phase1["Phase 1: Critical Fixes & Crawl Governance (Week 1)"]
-        P1A["Fix Next.js Title Template<br/>(Stops SERP Truncation)"]
-        P1B["Remove Dead SearchAction<br/>(Fixes 404 Schema Bug)"]
-        P1C["Clean robots.txt & Add AI Crawlers<br/>(Directs Bots Accurately)"]
-        P1D["Collapse Redirect Chain<br/>(Preserves Link Equity)"]
-    end
-
-    subgraph Phase2["Phase 2: Structured Data & Discovery (Weeks 2-3)"]
-        P2A["Implement BlogPosting Schema"]
-        P2B["Consolidate into @graph Schema"]
-        P2C["Deploy public/llms.txt"]
-        P2D["Add Security Headers"]
-    end
-
-    subgraph Phase3["Phase 3: E-E-A-T & Answer Engine Optimization (Month 2)"]
-        P3A["Named P.Eng Author Profiles & Bylines"]
-        P3B["Heading Optimization (Strip PROTOCOL badges)"]
-        P3C["Executive Answer Passage Optimization"]
-    end
-
-    subgraph Phase4["Phase 4: Asset Tuning & Drift Guardrails (Ongoing)"]
-        P4A["Image Responsive Sizes Optimization"]
-        P4B["Meta Description Character Refinement"]
-        P4C["Automated SEO Drift Baselines"]
-    end
-
-    P1A --> P2A
-    P1B --> P2B
-    P1C --> P2C
-    P2A --> P3A
-    P2C --> P3C
-    P3A --> P4C
-```
+**Status:** Handoff Ready. Strictly Informational / Advisory.  
+**Auditor Role:** Analysis and documentation only. No website source files, server configurations, or GSC properties have been modified.
 
 ---
 
-## Phase 1: Critical Fixes & Crawl Governance (Immediate / Week 1)
+## 1. Executive Remediation Summary
 
-### ACTION-01: Remove Dead Sitelinks Searchbox (`SearchAction`) in `WebSite` Schema
-* **Priority**: Critical (Schema / Penalty Risk)
-* **Specific Observation (Evidence)**:
-  `WebSite` schema on homepage targets `https://www.aegi.ca/search?q={search_term_string}` which returns **HTTP 404 Not Found**.
-* **Concrete Action Step**:
-  In `components/Schema.tsx` or `app/layout.tsx`, remove the `potentialAction: SearchAction` property completely until an actual search page `/search` exists.
-* **Dependencies**: None. Can be deployed immediately.
-* **Leading Indicator**: Google Rich Results Test passes with 0 action errors.
-* **Falsifiability Test**: If `curl -I https://www.aegi.ca/search?q=test` returns 404 while `potentialAction` remains in page source, this fix failed.
+This remediation plan organizes developer tasks by priority, estimated effort, and expected business/search impact. It distinguishes **actionable technical fixes** from **healthy, expected GSC exclusions** that must not be altered.
 
 ---
 
-### ACTION-02: Fix Next.js Title Template Double-Branding
-* **Priority**: High (SERP Visibility & CTR)
-* **Specific Observation (Evidence)**:
-  All 13 blog articles reach 90–110 characters (e.g. `Haul Road Design: 7 Key Engineering Considerations | AEGI Alberta | AEGI - Advanced Engineering Group Inc.`), exceeding Google's 60-character / 580px truncation limit.
-* **Concrete Action Step**:
-  In `app/layout.tsx`, update `metadata.title`:
-  ```typescript
-  title: {
-    template: '%s | AEGI Engineering',
-    default: 'AEGI Engineering | Professional Engineering in Alberta',
-  }
+## 2. Prioritized Task Matrix
+
+| ID | Issue Title | Severity | Priority | Effort | Confidence | Target Location | Acceptance Criteria |
+|:---:|---|:---:|:---:|:---:|:---:|---|---|
+| **P1.1** | **Review Schema Directional Conflict** | High | **P1** | ~30 min | 100% (GSC Verified) | `app/page.tsx` or `components/Schema.tsx` | Google Rich Results Test passes with 0 warnings on Review snippets. |
+| **P2.1** | **Root Canonical Trailing-Slash Discrepancy** | Medium | **P2** | ~15 min | 100% (DOM & GSC Verified) | `app/page.tsx` (`metadata.alternates.canonical`) | HTML source outputs `<link rel="canonical" href="https://www.aegi.ca/">`. |
+| **P2.2** | **Mobile Horizontal Overflow at 375px** | Medium | **P2** | 1–2 hrs | 100% (Playwright Verified) | `app/layout.tsx` / card slider CSS | `document.documentElement.scrollWidth === window.innerWidth` at 375px width. |
+| **P2.3** | **Blog-to-Service Internal Linking Funnels** | Medium | **P2** | 2 hrs | 100% (Content Audit) | `app/blog/[slug]/page.tsx` or blog content | Every blog article includes 2+ contextual links pointing to commercial service pages. |
+| **P3.1** | **Heading Hierarchy Normalization** | Low | **P3** | 1 hr | 100% (DOM Verified) | `app/page.tsx` & `components/Footer.tsx` | Outline validator outputs sequential headings (H1 ➔ H2 ➔ H3); footer headings converted to `<p>`. |
+| **P3.2** | **Direct Single-Hop Legacy WordPress Redirects** | Low | **P3** | ~30 min | 100% (HTTP Trace Verified) | `next.config.js` (`redirects` array) | `curl -IL https://aegi.ca/electrical-engineering/` reaches final destination without intermediate hops. |
+
+---
+
+## 3. Detailed Developer Implementation Guidance
+
+### Task P1.1: Remove Circular `itemReviewed` in Nested Review Schema
+- **Evidence:** GSC URL Inspection on `https://www.aegi.ca/` raised 4 warnings: *"A nested '<parent_node>' object can't contain the 'itemReviewed' field. Remove 'itemReviewed' to avoid directional conflict."*
+- **Source File:** `app/page.tsx` or your root JSON-LD structured data generator.
+- **Implementation Guidance (Illustrative):**
+  ```diff
+  // In your ProfessionalService review array:
+  "review": [
+    {
+      "@type": "Review",
+      "author": { "@type": "Person", "name": "Salim Rana" },
+      "reviewRating": { "@type": "Rating", "ratingValue": "5", "bestRating": "5" },
+      "reviewBody": "Advanced Engineering Group Inc did a great job...",
+  -   "itemReviewed": { "@id": "https://www.aegi.ca/#organization" }
+    }
+  ]
   ```
-  Ensure individual page titles are drafted between 40–55 characters before template appending.
-* **Dependencies**: Unblocks BlogPosting schema generation in Phase 2.
-* **Leading Indicator**: Search engine preview tools show zero title truncation ellipsis (`...`).
-* **Falsifiability Test**: If Google Search Console shows title lengths > 65 characters in SERP impressions, template bloat persists.
+- **Post-Fix Verification:** Run `https://www.aegi.ca/` in [Google Rich Results Test](https://search.google.com/test/rich-results) and verify 0 warnings under Review Snippets.
 
 ---
 
-### ACTION-03: Modernize `robots.txt` & Allow AI Search Crawlers
-* **Priority**: High (Crawl Budget & GEO)
-* **Specific Observation (Evidence)**:
-  Site contains legacy WordPress disallows (`/wp-content/`, `/wp-admin/`, `/wp-includes/`) on a Next.js platform and provides zero guidance for AI search engines.
-* **Concrete Action Step**:
-  Update `public/robots.txt`:
-  ```text
-  User-Agent: *
-  Allow: /
-  Disallow: /api/
-  Disallow: /admin/
-
-  # AI Search & Retrieval (Allow)
-  User-agent: OAI-SearchBot
-  Allow: /
-
-  User-agent: Claude-SearchBot
-  Allow: /
-
-  User-agent: PerplexityBot
-  Allow: /
-
-  Sitemap: https://www.aegi.ca/sitemap.xml
+### Task P2.1: Align Canonical Tag Trailing Slash
+- **Evidence:** HTML declares `https://www.aegi.ca` (no slash), but server response and Google-selected canonical is `https://www.aegi.ca/`.
+- **Source File:** `app/page.tsx` or `app/layout.tsx`.
+- **Implementation Guidance (Illustrative):**
+  ```diff
+  export const metadata = {
+    alternates: {
+  -   canonical: 'https://www.aegi.ca',
+  +   canonical: 'https://www.aegi.ca/',
+    },
+  };
   ```
-* **Dependencies**: Unblocks `llms.txt` discovery in Phase 2.
-* **Leading Indicator**: GSC robots.txt testing tool reports 0 warnings and valid sitemap linkage.
-* **Falsifiability Test**: If crawler logs show bot rejections or 404 queries for WordPress paths, the old robots.txt remains cached or active.
+- **Post-Fix Verification:** `curl -s https://www.aegi.ca/ | grep 'rel="canonical"'` confirms `href="https://www.aegi.ca/"`.
 
 ---
 
-### ACTION-04: Consolidate Non-Secure / Non-WWW Redirect Chain
-* **Priority**: Medium (Technical Infrastructure)
-* **Specific Observation (Evidence)**:
-  `http://aegi.ca` redirects through two hops (`http://aegi.ca` $\rightarrow$ 308 $\rightarrow$ `https://aegi.ca/` $\rightarrow$ 301 $\rightarrow$ `https://www.aegi.ca/`).
-* **Concrete Action Step**:
-  Update edge redirect rules in `vercel.json` or DNS settings so `http://aegi.ca` and `https://aegi.ca` both redirect directly to `https://www.aegi.ca/` with a single 301 Permanent Redirect.
-* **Dependencies**: None.
-* **Leading Indicator**: `curl -ILs http://aegi.ca` executes exactly one redirect hop.
-* **Falsifiability Test**: If response history contains $>1$ status code before 200, edge configuration failed.
+### Task P2.2: Resolve Mobile Horizontal Overflow at 375px
+- **Evidence:** Playwright emulation at 375×812 detected `scrollWidth > innerWidth` (`horizontal_scroll: true`).
+- **Source File:** `app/layout.tsx` and container components in "Consultancy Insights" and "Our Work Values".
+- **Implementation Guidance (Illustrative):**
+  - Add `overflow-x-hidden` on parent layout wrapper:
+    ```tsx
+    <main className="min-h-screen overflow-x-hidden max-w-full">
+    ```
+  - Ensure card sliders or logo rows utilize `max-w-full` rather than fixed pixel minimums.
+- **Post-Fix Verification:** In browser dev tools set to iPhone SE/12 (375px width), confirm horizontal scrolling is completely eliminated.
 
 ---
 
-## Phase 2: Structured Data & Discovery (Weeks 2–3)
-
-### ACTION-05: Implement Dynamic `BlogPosting` Schema
-* **Priority**: High (Structured Data)
-* **Specific Observation (Evidence)**:
-  All 13 blog posts completely lack `Article` or `BlogPosting` schema, preventing Google and AI engines from recognizing author, publication date, or headline entity data.
-* **Concrete Action Step**:
-  In `app/blog/[slug]/page.tsx`, inject dynamic `BlogPosting` JSON-LD with: `headline`, `image`, `datePublished`, `dateModified`, `author`, `publisher`, and `description`.
-* **Dependencies**: Requires named author entities (Phase 3).
-* **Leading Indicator**: Google Search Console URL Inspection confirms "Article" rich snippet eligibility.
-* **Falsifiability Test**: If Rich Results Test reports "No Article structured data found" on any blog URL, component injection failed.
+### Task P2.3: Build Editorial Internal Links from 13 Blog Articles
+- **Evidence:** 13 technical articles receive organic impressions in GSC but contain 0 in-body links or inquiry banners pointing to `/services/*`.
+- **Source File:** Blog markdown content / CMS.
+- **Implementation Guidance:**
+  - Add 2 contextual editorial links per post pointing to the relevant engineering service page.
+  - Add an inline callout block at the bottom of each article:
+    `"Need P.Eng stamped drawings for your project? Contact our licensed engineers for a consultation."` ➔ linking to `/get-quote` or the relevant `/services/:slug`.
+- **Post-Fix Verification:** Verify with an internal link crawler that all 13 articles pass link equity to core service URLs.
 
 ---
 
-### ACTION-06: Deploy `public/llms.txt` for AI Search Ingestion
-* **Priority**: High (GEO / AI Overviews)
-* **Specific Observation (Evidence)**:
-  `https://www.aegi.ca/llms.txt` returns 404. LLMs lack an authoritative summary of AEGI's engineering services and licensing jurisdictions.
-* **Concrete Action Step**:
-  Create and deploy `public/llms.txt` outlining AEGI's engineering capabilities, APEGA permit status, regional offices (Edmonton/Calgary), and links to primary service pages.
-* **Dependencies**: Requires modernized `robots.txt` from Phase 1.
-* **Leading Indicator**: `scripts/agentic_check.py` returns green (HTTP 200) for `llms.txt`.
-* **Falsifiability Test**: If requesting `/llms.txt` yields a 404 status code, deployment to Vercel was missed.
+### Task P3.1: Sequential Heading Structure Normalization
+- **Evidence:** Homepage outline skips from H1 to H3, and H2 to H4. Footer navigation uses H4 headings.
+- **Source File:** `app/page.tsx` and `components/Footer.tsx`.
+- **Implementation Guidance:**
+  - Change "Quick Consultation Request" from `H3` to `H2` or a stylized `<p>`.
+  - Change affiliation and testimonial headers from `H4` to `H3`.
+  - In `components/Footer.tsx`, change `H4` tags ("Quick Links", "Services", "Contact") to `<p className="font-semibold text-sm">` inside `<nav aria-label="Footer">`.
+- **Post-Fix Verification:** Run an accessibility/heading outline validator and verify zero skipped heading ranks.
 
 ---
 
-### ACTION-07: Implement Standard Security Headers in Next.js
-* **Priority**: Medium (Technical & Security)
-* **Specific Observation (Evidence)**:
-  HTTP response headers lack `X-Frame-Options`, `X-Content-Type-Options: nosniff`, and `Referrer-Policy`.
-* **Concrete Action Step**:
-  Add `headers()` configuration in `next.config.js` to enforce `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, and `Referrer-Policy: strict-origin-when-cross-origin`.
-* **Dependencies**: None.
-* **Leading Indicator**: Securityheaders.com rating improves from D/F to A/A+.
-* **Falsifiability Test**: If browser DevTools Network tab shows missing `X-Content-Type-Options`, next.config.js headers failed to compile.
+### Task P3.2: Direct Legacy URL Redirect Mapping
+- **Evidence:** Requests to legacy WordPress URLs (e.g. `https://aegi.ca/electrical-engineering/`) experience 3 hops before reaching the destination.
+- **Source File:** `next.config.js`.
+- **Implementation Guidance (Illustrative):**
+  ```javascript
+  // next.config.js
+  module.exports = {
+    async redirects() {
+      return [
+        {
+          source: '/electrical-engineering',
+          destination: 'https://www.aegi.ca/services/electrical-engineering',
+          permanent: true,
+        },
+        {
+          source: '/mechanical-hvac',
+          destination: 'https://www.aegi.ca/services/mechanical-hvac',
+          permanent: true,
+        },
+      ];
+    },
+  };
+  ```
+- **Post-Fix Verification:** `curl -IL https://aegi.ca/electrical-engineering/` reaches the final destination with no unnecessary intermediate hops.
 
 ---
 
-## Phase 3: E-E-A-T & Authority Signals (Month 2)
+## 4. What Developers Should NOT Change (Safe GSC Exclusions)
 
-### ACTION-08: Introduce Named P.Eng Author Profiles & Bylines
-* **Priority**: High (E-E-A-T & Quality Signals)
-* **Specific Observation (Evidence)**:
-  Technical analyses of high-stakes civil and structural topics are published under generic company branding with zero individual author accountability.
-* **Concrete Action Step**:
-  1. Add author cards with engineer name, P.Eng designation, and APEGA license number.
-  2. Create bio routes (`/about/team/[slug]`) linked to verified LinkedIn and engineering association profiles.
-  3. Map author URLs into `BlogPosting.author.url`.
-* **Dependencies**: Depends on dynamic `BlogPosting` schema from Phase 2.
-* **Leading Indicator**: Increased branded organic search queries for lead engineers and higher rankings for competitive commercial queries.
-* **Falsifiability Test**: If articles display generic bylines without individual accreditation after 60 days, E-E-A-T implementation failed.
-
----
-
-### ACTION-09: Restructure Heading Hierarchy on Technical Guides
-* **Priority**: Medium (On-Page SEO)
-* **Specific Observation (Evidence)**:
-  Blog titles contain internal numbering badges in `<h1>` tags (e.g. `PROTOCOL #008StormwaterManagementDesign...`), diluting keyword weight.
-* **Concrete Action Step**:
-  Move protocol identifiers into independent `<span class="badge">` elements above the `<h1>`. Ensure `<h1>` begins directly with the target keyword phrase.
-* **Dependencies**: None.
-* **Leading Indicator**: DOM heading outlines cleanly reflect primary target keywords in SEO crawlers.
-* **Falsifiability Test**: If rendered `<h1>` innerText still contains "PROTOCOL #", component refactoring failed.
-
----
-
-### ACTION-09: Optimize Passage Structure for Google AI Overviews & Perplexity
-* **Priority**: High (GEO)
-* **Specific Observation (Evidence)**:
-  Articles lack concise 40–60 word definitive definition boxes answering high-value informational questions.
-* **Concrete Action Step**:
-  Add a dedicated "Key Takeaways" or "P.Eng Definition" callout at the beginning of each technical post answering core questions directly.
-* **Dependencies**: Unblocked by Action 09.
-* **Leading Indicator**: Site content begins appearing as a cited reference in Perplexity and Google AI Overviews.
-* **Falsifiability Test**: If zero AI Overview citations occur after 90 days, passage answers are insufficiently concise or lack entity prominence.
-
----
-
-## Phase 4: Asset Optimization & Drift Baselines (Ongoing)
-
-### ACTION-10: Optimize Next.js Image Responsive `sizes` Attributes
-* **Priority**: Medium (Performance / CWV)
-* **Specific Observation (Evidence)**:
-  Branding logo requests unconstrained 3840px image assets (`w=3840`) across mobile viewports.
-* **Concrete Action Step**:
-  Add `sizes="(max-width: 768px) 160px, 220px"` to `<Image>` components in navbar and hero templates.
-* **Dependencies**: None.
-* **Leading Indicator**: Mobile network waterfall shows image requests capped at $\le 384\text{px}$.
-* **Falsifiability Test**: If network logs show `w=3840` requests from mobile user-agents, the `sizes` attribute is ineffective.
-
----
-
-### ACTION-11: Establish Automated SEO Drift Monitoring
-* **Priority**: Low (Long-Term Stability)
-* **Specific Observation (Evidence)**:
-  Next.js template modifications frequently cause accidental regressions in meta titles and structured data.
-* **Concrete Action Step**:
-  Capture an initial drift baseline using `python scripts/drift_baseline.py https://www.aegi.ca/` and integrate `drift_compare.py` into production CI/CD deployment checks.
-* **Dependencies**: Best run after Phase 1 and Phase 2 fixes are live.
-* **Leading Indicator**: CI/CD alerts trigger automatically upon unauthorized title or schema regressions.
-* **Falsifiability Test**: If metadata changes deploy to production without generating a drift delta alert, monitoring hooks failed.
-
----
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Audit Prepared & Verified by: Syed Mesum Ali Shah
-Full-Stack Engineer & Technical SEO Specialist
-🌐 Portfolio: https://www.mesumali.xyz
-💼 LinkedIn: https://www.linkedin.com/in/mesumali-dev
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. **Do NOT add `X-Robots-Tag: noindex` to AVIF images:**
+   - Appears in GSC Page Indexing because images are binary assets, not web documents.
+   - Adding `noindex` removes them from **Google Image Search**. Leave them as-is.
+2. **Do NOT add generic trailing-slash regexes in `next.config.js`:**
+   - Next.js natively manages `trailingSlash: false`. Custom regexes risk routing conflicts and infinite loops.
+3. **Do NOT create a standalone `/services` page without client approval:**
+   - AEGI deliberately routes `/services` ➔ `/#services` to present their service cards on the homepage, while maintaining 8 separate service sub-pages.
+4. **Do NOT click "Validate Fix" in Google Search Console:**
+   - Validating expected redirects or media assets triggers automated validation failure because these URLs are intended to remain excluded.

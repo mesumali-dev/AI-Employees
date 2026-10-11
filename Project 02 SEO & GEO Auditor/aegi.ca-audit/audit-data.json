@@ -1,189 +1,156 @@
 {
   "summary": {
-    "health_score": 71,
-    "business_type": "Multi-disciplinary Engineering Consulting (B2B / Professional Services)",
-    "domain": "aegi.ca",
-    "analyzed_pages": 34,
+    "health_score": 81,
+    "business_type": "Engineering Consultancy / Professional Services (B2B, Civil & Structural)",
     "top_findings": [
-      "Dead Sitelinks Searchbox endpoint in WebSite Schema (returns HTTP 404)",
-      "Systemic title tag double-branding causing SERP truncation across all 13 blog articles",
-      "Complete absence of BlogPosting / Article schema on all technical publications",
-      "Legacy WordPress paths in robots.txt on a Next.js / Vercel website",
-      "Missing individual P.Eng author bylines and credentials on safety-critical engineering analyses"
+      "GSC Review Snippet Directional Conflict: nested reviews contain conflicting 'itemReviewed' reference",
+      "Multi-Hop Redirect Chains on HTTP / Non-WWW and legacy WordPress URLs",
+      "Mobile horizontal overflow at 375px viewport (scrollWidth > innerWidth)",
+      "Heading hierarchy skips levels (H1 to H3, H2 to H4) and uses H4 in footer navigation",
+      "Root canonical tag omits trailing slash while server returns trailing slash"
     ],
     "quick_wins": [
-      "Fix Next.js title.template in layout.tsx to eliminate double-branding and truncate titles under 60 chars",
-      "Remove broken potentialAction: SearchAction from WebSite schema",
-      "Clean up robots.txt to remove legacy WordPress directives and add explicit AI search crawler allowances",
-      "Deploy public/llms.txt to unlock AI Overview and answer engine indexing",
-      "Add security headers (X-Frame-Options, X-Content-Type-Options) in next.config.js"
+      "Fix brand query 'aegi' title tag to push from Pos 6.1 to Top 3 (649 impressions, 0.6% CTR)",
+      "Target 'hvac engineering services' on /services/mechanical-hvac (Pos 7.7-9.1, 130 impressions, 0 clicks)",
+      "Remove 'itemReviewed' from nested Review JSON-LD to clear 4 Google Search Console warnings",
+      "Add contextual links from 13 technical blog posts to core commercial service pages"
     ]
   },
   "categories": [
     {
       "name": "Technical SEO",
-      "score": 72,
-      "weight": "22%",
+      "score": 78,
       "what_works": [
-        "100% crawl success across 34 sitemap URLs with zero broken internal links",
-        "Consistent non-trailing slash canonical tags across all pages",
-        "HTTPS enforcement and modern HTTP/2 Vercel CDN delivery"
+        "Vercel Edge Network hosting with HTTP/2 and HSTS preload",
+        "Valid robots.txt cleanly rendering 200 OK",
+        "Clean 404 response handling for nonexistent paths",
+        "Canonical tags present across all pages"
       ],
       "findings": [
         {
-          "title": "Legacy WordPress Directives in robots.txt on Next.js Site",
+          "title": "Multi-Hop Canonical Redirect Chains on HTTP & Legacy URLs",
           "severity": "High",
-          "description": "robots.txt disallows /wp-content/ and /wp-admin/ on a Next.js site and lacks rules for AI crawlers.",
-          "recommendation": "Update robots.txt with clean Next.js rules and explicit AI search permissions."
+          "description": "http://aegi.ca redirects through two 308 hops before reaching https://www.aegi.ca/. Legacy service URLs also suffer from intermediate hops.",
+          "recommendation": "Collapse redirect rules in next.config.js to direct 1-hop 301/308 redirects to https://www.aegi.ca/*."
         },
         {
-          "title": "Multi-Hop Redirect Chain on Non-Secure / Non-WWW Variants",
-          "severity": "Medium",
-          "description": "http://aegi.ca redirects through 2 hops (308 then 301) before reaching https://www.aegi.ca/.",
-          "recommendation": "Configure edge rules to redirect all HTTP and non-www variants directly in one 301 hop."
+          "title": "Mobile Horizontal Overflow at 375px Viewport",
+          "severity": "High",
+          "description": "Headless browser testing revealed document.documentElement.scrollWidth > window.innerWidth at 375px viewport width.",
+          "recommendation": "Clamp parent container max-widths to 100vw and add overflow-x: hidden to prevent horizontal scrolling."
         },
         {
-          "title": "Missing Standard Security Headers",
+          "title": "Heading Hierarchy Skips and Footer Non-Semantic Headings",
           "severity": "Medium",
-          "description": "Lacks X-Frame-Options, X-Content-Type-Options: nosniff, and Referrer-Policy.",
-          "recommendation": "Add standard headers in next.config.js headers() configuration."
+          "description": "Homepage skips from H1 directly to H3, and H2 directly to H4. Footer navigation columns use H4 headings instead of semantic nav elements.",
+          "recommendation": "Restructure headings sequentially (H1 -> H2 -> H3) and replace footer headings with styled p tags inside nav containers."
+        },
+        {
+          "title": "Root Canonical Tag Missing Trailing Slash",
+          "severity": "Low",
+          "description": "Homepage declares canonical https://www.aegi.ca while Google serves https://www.aegi.ca/.",
+          "recommendation": "Update metadata.alternates.canonical to include the trailing slash https://www.aegi.ca/."
         }
       ]
     },
     {
       "name": "Content Quality & E-E-A-T",
-      "score": 74,
-      "weight": "23%",
+      "score": 84,
       "what_works": [
-        "Strong technical depth averaging 1,280 words per article",
-        "Rigorous citation of Canadian and provincial regulatory engineering standards (APEGA, CSA, API)",
-        "Zero keyword stuffing with natural readability"
+        "Prominent APEGA and NAPEG professional engineering permit holder badges",
+        "Dedicated individual P.Eng team member profile pages with biographical details",
+        "High information density with zero generic AI filler patterns detected"
       ],
       "findings": [
         {
-          "title": "Anonymous Engineering By-lines (E-E-A-T Deficiency)",
-          "severity": "High",
-          "description": "Safety-critical engineering guides lack named P.Eng author bylines, bios, and APEGA license references.",
-          "recommendation": "Add named author bios, professional designations, and team profile links."
+          "title": "High Micro-copy Repetition Across Service Cards",
+          "severity": "Medium",
+          "description": "Content tokenization detected 61% repetition index on the homepage due to duplicate phrase structures across service cards.",
+          "recommendation": "Differentiate service micro-copy with concrete project examples, municipal compliance details, and specific tooling."
         },
         {
-          "title": "Internal Protocol Codes Injected into H1 Elements",
-          "severity": "Medium",
-          "description": "H1 tags include 'PROTOCOL #00X' prefixes, diluting target search keyword focus.",
-          "recommendation": "Separate protocol badges into independent UI spans above the H1."
+          "title": "Missing Blog-to-Service Internal Linking Bridges",
+          "severity": "High",
+          "description": "13 technical blog posts receive organic impressions but lack in-content contextual links pointing to commercial service landing pages.",
+          "recommendation": "Add contextual editorial links and inquiry callouts in every blog post pointing to relevant service pages."
         }
       ]
     },
     {
-      "name": "On-Page SEO",
-      "score": 68,
-      "weight": "20%",
+      "name": "Schema / Structured Data",
+      "score": 75,
       "what_works": [
-        "Single H1 structure maintained across all pages",
-        "Clear geographic targeting for Alberta, Edmonton, and Calgary",
-        "Proper canonical tags pointing to self on all pages"
+        "Comprehensive ProfessionalService, Organization, and WebSite schemas",
+        "APEGA Permit to Practice credential schema explicitly declared",
+        "BreadcrumbList structured data validated across service pages"
       ],
       "findings": [
         {
-          "title": "Systemic Title Tag Double-Branding & Character Length Bloat",
+          "title": "Directional Conflict on Nested Review Schema",
           "severity": "High",
-          "description": "Blog titles exceed 100 characters due to double brand suffix appending in Next.js layout.",
-          "recommendation": "Update Next.js title.template to '%s | AEGI Engineering' and enforce <60 chars."
+          "description": "Google Search Console URL Inspection raised 4 warnings: 'A nested parent node object cannot contain the itemReviewed field.'",
+          "recommendation": "Remove itemReviewed from individual reviews nested directly inside ProfessionalService."
         },
         {
-          "title": "Meta Description Character Length Exceeds Optimal Pixel Budget",
+          "title": "Deprecated FAQPage Rich Result Schema",
           "severity": "Medium",
-          "description": "Multiple descriptions reach 180-207 characters, causing SERP snippet truncation.",
-          "recommendation": "Rewrite descriptions to 135-155 characters prioritizing value proposition and CTA."
+          "description": "Commercial service pages declare 4.4KB FAQPage schema which Google no longer awards rich snippet results to for commercial sites.",
+          "recommendation": "Retain FAQs in user HTML but replace FAQPage schema with structured Service and Offer catalog markup."
         }
       ]
     },
     {
-      "name": "Schema & Structured Data",
-      "score": 64,
-      "weight": "10%",
+      "name": "Performance & Core Web Vitals",
+      "score": 80,
       "what_works": [
-        "ProfessionalService and WebSite schema present on the site",
-        "BreadcrumbList schema implemented on all subpages",
-        "Local geographic and address details included in schema"
+        "Fast TTFB powered by Vercel edge caching (X-Vercel-Cache: HIT)",
+        "Modern AVIF image format utilized across all service and badge assets"
       ],
       "findings": [
         {
-          "title": "Dead Internal Search Target in Sitelinks Searchbox (SearchAction)",
-          "severity": "Critical",
-          "description": "WebSite schema declares /search?q={search_term_string} which returns HTTP 404.",
-          "recommendation": "Remove potentialAction: SearchAction until an active search route is implemented."
-        },
-        {
-          "title": "Missing BlogPosting / Article Schema on Blog Posts",
-          "severity": "High",
-          "description": "All 13 blog articles completely lack Article or BlogPosting JSON-LD markup.",
-          "recommendation": "Inject dynamic BlogPosting schema in app/blog/[slug]/page.tsx."
-        },
-        {
-          "title": "Redundant Global Schema Duplication",
+          "title": "Service Card Images Missing Explicit Width and Height Attributes",
           "severity": "Medium",
-          "description": "WebSite and ProfessionalService are re-injected on every page as disconnected blocks.",
-          "recommendation": "Consolidate into an interconnected @graph structure using @id references."
+          "description": "Service card images have width: None and height: None, increasing risk of Cumulative Layout Shift before hydration.",
+          "recommendation": "Provide explicit aspect-ratio CSS or explicit width/height dimensions on all image wrappers."
+        },
+        {
+          "title": "No Conversion CTA Visible Above 1080px Desktop Fold",
+          "severity": "Medium",
+          "description": "Visual analysis confirms hero headline is visible but primary action buttons fall below standard above-the-fold cutoff.",
+          "recommendation": "Elevate primary 'Request a Quote' button directly beneath hero subheadline."
         }
       ]
     },
     {
-      "name": "Performance (CWV)",
-      "score": 82,
-      "weight": "10%",
+      "name": "AI Search Readiness & GEO",
+      "score": 88,
       "what_works": [
-        "Sub-250ms TTFB powered by Vercel Edge caching and Next.js SSG",
-        "Near-zero Cumulative Layout Shift (CLS < 0.05)",
-        "Fast DOM Complete times under 1.5 seconds"
+        "Active llms.txt (5.0KB) and llms-full.txt (7.7KB) passing all Lighthouse rules",
+        "Explicit robots.txt allow rules for GPTBot, OAI-SearchBot, Claude-SearchBot, PerplexityBot, and Google-Extended",
+        "Server-rendered HTML fully extractable without JavaScript execution"
       ],
       "findings": [
         {
-          "title": "Unconstrained 3840px Image Variant Requests for Hero Logo",
-          "severity": "Medium",
-          "description": "Logo asset requests 3840px wide variation even on mobile viewports.",
-          "recommendation": "Add explicit sizes attribute to next/image components."
-        }
-      ]
-    },
-    {
-      "name": "AI Search Readiness (GEO & Agentic)",
-      "score": 58,
-      "weight": "10%",
-      "what_works": [
-        "Server-rendered HTML accessible to AI bots without mandatory JS execution",
-        "Strong entity mentions (APEGA, CSA Z662, Edmonton, Calgary)"
-      ],
-      "findings": [
-        {
-          "title": "Missing llms.txt and Machine-Readable LLM Index",
-          "severity": "High",
-          "description": "/llms.txt and /llms-full.txt return 404, hindering answer engine citation indexing.",
-          "recommendation": "Publish public/llms.txt outlining services, accreditations, and regulatory bodies."
-        },
-        {
-          "title": "Absence of Direct Definition Snippets for AI Overview Ingestion",
-          "severity": "High",
-          "description": "Technical pages lack concise 40-60 word definitive answer summaries for featured snippets.",
-          "recommendation": "Add quick-summary definition blocks below headings on key engineering topics."
+          "title": "Missing Accept: text/markdown Content Negotiation",
+          "severity": "Low",
+          "description": "Individual service and blog URLs do not offer Markdown representations for agentic consumption.",
+          "recommendation": "Implement Next.js edge route handling for Accept: text/markdown requests."
         }
       ]
     },
     {
       "name": "Images",
       "score": 85,
-      "weight": "5%",
       "what_works": [
-        "0 broken image links across all crawled pages",
-        "All images have descriptive alt text",
-        "WebP format utilized via Next.js image optimizer"
+        "100% of images feature descriptive, keyword-aligned alt text",
+        "Next.js image optimization pipeline active with modern AVIF delivery"
       ],
       "findings": [
         {
-          "title": "Missing Explicit Dimensions on Select Static SVG Assets",
+          "title": "Oversized Source Width Queries on Card Thumbnails",
           "severity": "Low",
-          "description": "A few inline decoration SVGs lack explicit width/height attributes.",
-          "recommendation": "Add explicit width/height or aspect-ratio CSS to all SVG wrappers."
+          "description": "Card images query w=3840 parameters in Next.js image loader for 350px display slots.",
+          "recommendation": "Tune sizes prop in next/image to accurately represent card column constraints (e.g. (max-width: 768px) 100vw, 350px)."
         }
       ]
     }
@@ -191,42 +158,41 @@
   "action_plan": {
     "phases": [
       {
-        "name": "Phase 1: Critical Fixes & Compliance (Week 1)",
+        "name": "Phase 1: Critical Fixes & GSC Cleanliness",
         "timeframe": "Week 1",
         "items": [
-          "Remove invalid potentialAction SearchAction from WebSite schema to eliminate 404 search penalties",
-          "Fix Next.js title.template double-branding in layout.tsx to resolve title truncation across all 13 blog posts",
-          "Replace legacy WordPress robots.txt with clean Next.js directives and explicit AI crawler allowances",
-          "Eliminate double redirect hop on http://aegi.ca via direct 301 edge rules"
+          "Remove 'itemReviewed' inside nested Review schema to resolve 4 GSC Inspection warnings",
+          "Collapse multi-hop redirect chains on HTTP, non-WWW, and legacy WordPress URLs into single 301/308 hops",
+          "Fix mobile horizontal overflow at 375px viewport (clamp container widths, overflow-x-hidden)",
+          "Align root canonical tag with server trailing slash (https://www.aegi.ca/)"
         ]
       },
       {
-        "name": "Phase 2: Structured Data & Schema Graph (Weeks 2-3)",
+        "name": "Phase 2: High-Impact SEO & Striking Distance Quick Wins",
         "timeframe": "Weeks 2-3",
         "items": [
-          "Implement dynamic BlogPosting schema on all 13 blog articles with headline, author, and dates",
-          "Consolidate separate JSON-LD blocks into an interconnected @graph linked via @id references",
-          "Deploy public/llms.txt with concise service catalog and APEGA licensing credentials",
-          "Configure standard security headers (X-Frame-Options, X-Content-Type-Options) in next.config.js"
+          "Optimize brand title tag for 'aegi' to push Position 6.1 (649 impressions) into Top 3",
+          "Update /services/mechanical-hvac title and H1 to target 'hvac engineering services' (Pos 7.7-9.1, 130 imp, 0 clicks)",
+          "Inject contextual internal links from 13 blog articles directly into relevant service pages",
+          "Fix heading hierarchy skips (H1 -> H3, H2 -> H4) and replace footer H4s with semantic nav elements"
         ]
       },
       {
-        "name": "Phase 3: E-E-A-T & Authority Signals (Month 2)",
+        "name": "Phase 3: Schema & Content Authority",
         "timeframe": "Month 2",
         "items": [
-          "Add named P.Eng author bylines, professional bios, and licensing numbers to all engineering guides",
-          "Create dedicated engineer profile pages linked to LinkedIn and provincial associations (APEGA/EGBC)",
-          "Restructure blog H1 headings to remove 'PROTOCOL #00X' prefixes into separate badge components",
-          "Add 45-60 word 'Quick Summary' definition boxes to capture Google AI Overviews and Perplexity snippets"
+          "Deploy structured Service and Offer catalog schema across all 8 service landing pages",
+          "Connect Organization schema sameAs to official APEGA directory, BBB, and corporate registry entries",
+          "Add author bylines and P.Eng credential badges across all blog articles linking to /team/:slug"
         ]
       },
       {
-        "name": "Phase 4: Optimization, Performance & Monitoring (Ongoing)",
+        "name": "Phase 4: Monitoring & Conversion Optimization",
         "timeframe": "Ongoing",
         "items": [
-          "Add explicit sizes attributes to next/image components to eliminate oversized 3840px asset requests",
-          "Rewrite meta descriptions exceeding 160 characters to optimize click-through rates in mobile SERPs",
-          "Conduct bi-weekly SEO drift monitoring to ensure Next.js build deploys do not regress metadata"
+          "Add above-the-fold CTA button to hero section to increase mobile and desktop conversion rates",
+          "Add Next.js edge Markdown negotiation (Accept: text/markdown) for AI crawler efficiency",
+          "Track GSC clicks, impressions, and CTR weekly via scripts/gsc_query.py"
         ]
       }
     ]

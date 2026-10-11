@@ -278,10 +278,10 @@ def _header_of(path):
     """Return the existing header row of a CSV, or None if it has none."""
     if not os.path.exists(path):
         return None
-    with open(path, newline="", encoding="utf-8") as f:
+    with open(path, newline="", encoding="utf-8-sig") as f:
         reader = csv.reader(f)
         for row in reader:
-            return row
+            return [col.lstrip("\ufeff") for col in row]
     return None
 
 
@@ -298,7 +298,7 @@ def load_existing_keys(path):
     keys = {field: set() for field in DEDUP_FIELDS}
     if not os.path.exists(path):
         return keys
-    with open(path, newline="", encoding="utf-8") as f:
+    with open(path, newline="", encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
         for row in reader:
             for field in DEDUP_FIELDS:
@@ -472,9 +472,49 @@ def main():
             elif a == "--requested-for":
                 requested_for = next(it)
         with open(lead_json_path, encoding="utf-8") as f:
-            lead = json.load(f)
-        append_lead(path, lead, base_dir=base_dir, focus=focus,
-                    require_email=require_email, requested_for=requested_for)
+            leads = json.load(f)
+        if isinstance(leads, list):
+            appended_count = 0
+            for single_lead in leads:
+                # Run each in a sub-try so one duplicate/skip doesn't abort the batch
+                try:
+                    # check email
+                    if require_email and not _has_email(single_lead):
+                        print(f"SKIPPED {single_lead.get('Company Name')}: NO_EMAIL_OR_DUMMY")
+                        continue
+                    conf = single_lead.get("Opportunity Confidence")
+                    if conf is not None and str(conf).strip():
+                        try:
+                            if float(conf) < 60 and single_lead.get("Opportunity Status") != "Force Include":
+                                print(f"SKIPPED {single_lead.get('Company Name')}: LOW_CONFIDENCE")
+                                continue
+                        except ValueError:
+                            pass
+                    init_csv(path, focus=DEFAULT_FOCUS)
+                    cols = _header_of(path) or columns_for(DEFAULT_FOCUS)
+                    if base_dir:
+                        dup, field = is_duplicate_multi(base_dir, single_lead)
+                    else:
+                        dup, field = is_duplicate(path, single_lead)
+                    if dup:
+                        print(f"SKIPPED {single_lead.get('Company Name')}: DUPLICATE ({field})")
+                        continue
+                    row = {col: single_lead.get(col, "") for col in cols}
+                    if "Date Added" in row and not row["Date Added"]:
+                        row["Date Added"] = date.today().isoformat()
+                    if requested_for and "Requested For" in cols:
+                        row["Requested For"] = requested_for
+                    with open(path, "a", newline="", encoding="utf-8") as f_out:
+                        writer = csv.DictWriter(f_out, fieldnames=cols)
+                        writer.writerow(row)
+                    print(f"APPENDED: {single_lead.get('Company Name')}")
+                    appended_count += 1
+                except Exception as e:
+                    print(f"ERROR {single_lead.get('Company Name')}: {e}")
+            print(f"BATCH COMPLETE: {appended_count}/{len(leads)} appended.")
+        else:
+            append_lead(path, leads, base_dir=base_dir, focus=focus,
+                        require_email=require_email, requested_for=requested_for)
 
     else:
         print(__doc__)

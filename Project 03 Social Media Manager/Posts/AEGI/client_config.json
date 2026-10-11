@@ -1,0 +1,147 @@
+{
+  "client_info": {
+    "client_id": "AEGI",
+    "client_name": "Advanced Engineering Group Inc.",
+    "short_name": "AEGI",
+    "website": "https://www.aegi.ca",
+    "contact": {
+      "phone": "(587) 489-5781",
+      "email": "info@aegi.ca",
+      "address": "Edmonton & Calgary, Alberta, Canada"
+    }
+  },
+  "scheduling": {
+    "timezone": "Asia/Karachi",
+    "timezone_label": "PKT (Pakistan Standard Time, UTC+5)",
+    "authoritative_timezone": true,
+    "posting_cadence": "MWF",
+    "posting_days": ["Monday", "Wednesday", "Friday"],
+    "posts_per_week": 3,
+    "preferred_time_range": ["13:00", "19:00"],
+    "notes": "All posts must be scheduled between 1:00 PM and 7:00 PM Pakistan time (PKT). Pakistan time is the authoritative scheduling requirement. Do not convert the client's posting window to Canadian time."
+  },
+  "platforms": {
+    "linkedin": {
+      "enabled": true,
+      "company_name": "Advanced Engineering Group Inc.",
+      "company_id": "82538927",
+      "admin_url": "https://www.linkedin.com/company/82538927/admin/page-posts/published/",
+      "public_url": "https://www.linkedin.com/company/advanced-engineering-group-inc/",
+      "handle": "advanced-engineering-group-inc"
+    },
+    "meta_business_suite": {
+      "enabled": true,
+      "facebook_page_name": "Advanced Engineering Group Inc.",
+      "asset_id": "105588968926476",
+      "business_id": "452390086773165",
+      "scheduled_posts_url": "https://business.facebook.com/latest/posts/scheduled_posts?asset_id=105588968926476&business_id=452390086773165",
+      "composer_url": "https://business.facebook.com/latest/composer/?asset_id=105588968926476&business_id=452390086773165",
+      "facebook_public_url": "https://www.facebook.com/AdvancedEngineeringGroupInc",
+      "instagram_username": "advancedenggroupinc",
+      "instagram_public_url": "https://www.instagram.com/advancedenggroupinc/"
+    },
+    "x": {
+      "enabled": true,
+      "handle": "@advancedenginc",
+      "public_url": "https://x.com/advancedenginc",
+      "composer_url": "https://x.com/compose/post",
+      "scheduled_queue_url": "https://x.com/compose/post/unsent/scheduled"
+    },
+    "google_business_profile": {
+      "enabled": true,
+      "business_name": "Advanced Engineering Group Inc.",
+      "location_id": "15032877510699956978",
+      "manager_url": "https://www.google.com/search?q=Advanced+Engineering+Group+Inc.#mpd=~15032877510699956978/promote/updates",
+      "google_maps_cid": null
+    }
+  },
+  "cta_links": {
+    "primary": {
+      "quote": "https://www.aegi.ca/get-quote",
+      "contact": "https://www.aegi.ca/contact"
+    },
+    "services": {
+      "civil_engineering": "https://www.aegi.ca/services/civil-engineering",
+      "structural_engineering": "https://www.aegi.ca/services/structural-engineering",
+      "mechanical_hvac": "https://www.aegi.ca/services/mechanical-hvac",
+      "electrical_engineering": "https://www.aegi.ca/services/electrical-engineering",
+      "project_management": "https://www.aegi.ca/services/project-management",
+      "construction_support": "https://www.aegi.ca/services/construction-support",
+      "material_takeoff": "https://www.aegi.ca/services/material-takeoff",
+      "machine_control_model": "https://www.aegi.ca/services/machine-control-model"
+    },
+    "cta_button_mapping": {
+      "Book": "https://www.aegi.ca/get-quote",
+      "Learn more": "https://www.aegi.ca/get-quote",
+      "Call now": "tel:+15874895781",
+      "Order online": null,
+      "Buy": null,
+      "Sign up": null
+    }
+  },
+  "hashtags_and_mentions": {
+    "brand_hashtags": [
+      "#AEGI",
+      "#AlbertaEngineering",
+      "#EngineeringCoordination"
+    ],
+    "regional_hashtags": [
+      "#AlbertaConstruction",
+      "#AlbertaBusiness",
+      "#EdmontonConstruction",
+      "#CalgaryConstruction"
+    ],
+    "service_hashtags": {
+      "structural": [
+        "#StructuralEngineering",
+        "#BuildingExpansion",
+        "#StructuralAssessment",
+        "#AdaptiveReuse"
+      ],
+      "civil": [
+        "#CivilEngineering",
+        "#SiteGrading",
+        "#SiteDrainage",
+        "#StormwaterManagement",
+        "#RetainingWalls"
+      ],
+      "mechanical_hvac": [
+        "#MechanicalEngineering",
+        "#HVAC",
+        "#EnergyEfficiency",
+        "#CommercialUpgrades"
+      ],
+      "electrical": [
+        "#ElectricalEngineering",
+        "#PowerDistribution",
+        "#SmartBuildings",
+        "#EVInfrastructure"
+      ],
+      "project_management": [
+        "#ProjectManagement",
+        "#ConstructionManagement",
+        "#EngineeringConsulting"
+      ]
+    },
+    "verified_mentions": {
+      "x": "@advancedenginc",
+      "instagram": "@advancedenggroupinc",
+      "facebook": "AdvancedEngineeringGroupInc",
+      "linkedin": "advanced-engineering-group-inc"
+    },
+    "partner_mentions": null,
+    "founder_mentions": null
+  },
+  "media": {
+    "base_dir": "Posts/AEGI",
+    "current_batch_folder": "Month 01",
+    "naming_pattern": "Posts/AEGI/Month 01/Post {number}.png",
+    "aspect_ratio": "1:1",
+    "standard_resolution": "1254x1254",
+    "supported_formats": [
+      ".png",
+      ".jpg",
+      ".jpeg"
+    ]
+  }
+}
